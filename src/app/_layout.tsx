@@ -1,10 +1,11 @@
 import { Stack } from 'expo-router';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 
 export default function RootLayout() {
   return (
-    <>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <AnimatedSplashOverlay />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(onboarding)" />
@@ -14,6 +15,6 @@ export default function RootLayout() {
         <Stack.Screen name="checkout" options={{ headerShown: true, title: 'Checkout' }} />
         <Stack.Screen name="order-tracking/[id]" options={{ headerShown: true, title: 'Order' }} />
       </Stack>
-    </>
+    </GestureHandlerRootView>
   );
 }

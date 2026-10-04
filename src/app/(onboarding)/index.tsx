@@ -2,18 +2,24 @@ import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  Animated,
-  Easing,
   FlatList,
   Image,
   NativeScrollEvent,
   NativeSyntheticEvent,
-  PanResponder,
   Pressable,
   Text,
   View,
   useWindowDimensions,
 } from 'react-native';
+import { GestureDetector, Gesture } from 'react-native-gesture-handler';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  runOnJS,
+  interpolate,
+  Extrapolation,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const SLIDES = [
@@ -38,90 +44,63 @@ const SWIPE_THUMB = 52;
 const SWIPE_PAD = 6;
 
 function SwipeToGetStarted({ onComplete }: { onComplete: () => void }) {
-  const translateX = useRef(new Animated.Value(0)).current;
-  const widthRef = useRef(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const onCompleteRef = useRef(onComplete);
-  onCompleteRef.current = onComplete;
+  const width = useSharedValue(0);
+  const translateX = useSharedValue(0);
 
-  const maxTravel = (w: number) => Math.max(0, w - SWIPE_THUMB - SWIPE_PAD * 2);
-
-  const animateTo = (target: number, cb?: () => void) => {
-    Animated.timing(translateX, {
-      toValue: target,
-      duration: 180,
-      easing: Easing.out(Easing.quad),
-      useNativeDriver: true,
-    }).start(({ finished }) => {
-      if (finished) cb?.();
+  const panGesture = Gesture.Pan()
+    .onUpdate((e) => {
+      const maxTravel = Math.max(0, width.value - SWIPE_THUMB - SWIPE_PAD * 2);
+      translateX.value = Math.max(0, Math.min(e.translationX, maxTravel));
+    })
+    .onEnd((e) => {
+      const maxTravel = Math.max(0, width.value - SWIPE_THUMB - SWIPE_PAD * 2);
+      if (translateX.value > maxTravel * 0.5 || e.velocityX > 500) {
+        translateX.value = withSpring(maxTravel, { overshootClamping: true });
+        runOnJS(onComplete)();
+      } else {
+        translateX.value = withSpring(0, { overshootClamping: true });
+      }
     });
-  };
 
-  const responder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        translateX.stopAnimation();
-        setIsDragging(true);
-      },
-      onPanResponderMove: (_e, g) => {
-        const max = maxTravel(widthRef.current);
-        translateX.setValue(Math.max(0, Math.min(max, g.dx)));
-      },
-      onPanResponderRelease: (_e, g) => {
-        setIsDragging(false);
-        const max = maxTravel(widthRef.current);
-        const isTap = Math.abs(g.dx) < 6 && Math.abs(g.dy) < 6;
-        if (isTap || g.dx >= max * 0.5) {
-          animateTo(max, () => onCompleteRef.current());
-        } else {
-          animateTo(0);
-        }
-      },
-      onPanResponderTerminate: () => {
-        setIsDragging(false);
-        animateTo(0);
-      },
-    }),
-  ).current;
+  const animatedThumbStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
 
-  const labelOpacity = translateX.interpolate({
-    inputRange: [0, 36],
-    outputRange: [1, 0],
-    extrapolate: 'clamp',
-  });
+  const animatedLabelStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(translateX.value, [0, 36], [1, 0], Extrapolation.CLAMP),
+  }));
 
   return (
-    <View
-      className="relative h-16 w-full overflow-hidden rounded-full bg-white"
-      onLayout={(e) => {
-        widthRef.current = e.nativeEvent.layout.width;
-      }}
-      {...responder.panHandlers}>
-      {/* Left sliding thumb (animated) */}
-      <Animated.View
-        style={{ transform: [{ translateX }] }}
-        className="absolute left-1.5 top-1.5 bottom-1.5 w-12 h-12 items-center justify-center rounded-full bg-emerald-500">
-      <Ionicons name="chevron-forward" size={20} color="#fff" />
-      </Animated.View>
+    <GestureDetector gesture={panGesture}>
+      <View
+        className="relative h-16 w-full overflow-hidden rounded-full bg-white"
+        onLayout={(e) => {
+          width.value = e.nativeEvent.layout.width;
+        }}>
+        {/* Left sliding thumb (animated) */}
+        <Animated.View
+          style={[animatedThumbStyle]}
+          className="absolute left-1.5 top-1.5 bottom-1.5 w-12 h-12 items-center justify-center rounded-full bg-emerald-500 z-10">
+          <Ionicons name="chevron-forward" size={20} color="#fff" />
+        </Animated.View>
 
-      {/* Center label */}
-      <View className="flex-1 items-center justify-center">
-        <Animated.Text
-          style={{ opacity: labelOpacity }}
-          className="text-base font-bold text-content dark:text-content-dark">
-          Get Started
-        </Animated.Text>
-      </View>
+        {/* Center label */}
+        <View className="flex-1 items-center justify-center">
+          <Animated.Text
+            style={[animatedLabelStyle]}
+            className="text-base font-bold text-content dark:text-content-dark">
+            Get Started
+          </Animated.Text>
+        </View>
 
-      {/* Right check circle */}
-      <View className="absolute right-2 top-1.5 bottom-1.5 items-center justify-center">
-        <View className="h-10 w-10 items-center justify-center rounded-full border border-white bg-white/0">
-        <Ionicons name="checkmark" size={18} color="#10b981" />
+        {/* Right check circle */}
+        <View className="absolute right-2 top-1.5 bottom-1.5 items-center justify-center">
+          <View className="h-10 w-10 items-center justify-center rounded-full border border-white bg-white/0">
+            <Ionicons name="checkmark" size={18} color="#10b981" />
+          </View>
         </View>
       </View>
-    </View>
+    </GestureDetector>
   );
 }
 
