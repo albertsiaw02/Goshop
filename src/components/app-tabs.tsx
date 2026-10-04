@@ -1,11 +1,11 @@
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import { Icon, Label, NativeTabs } from 'expo-router/unstable-native-tabs';
 import { useColorScheme } from 'react-native';
 
 import { Colors } from '@/constants/theme';
 
 export default function AppTabs() {
   const scheme = useColorScheme();
-  const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
+  const colors = scheme === 'dark' ? Colors.dark : Colors.light;
 
   return (
     <NativeTabs
@@ -13,19 +13,28 @@ export default function AppTabs() {
       indicatorColor={colors.backgroundElement}
       labelStyle={{ selected: { color: colors.text } }}>
       <NativeTabs.Trigger name="index">
-        <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/home.png')}
-          renderingMode="template"
-        />
+        <Label>Home</Label>
+        <Icon sf={{ default: 'house', selected: 'house.fill' }} />
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="explore">
-        <NativeTabs.Trigger.Label>Explore</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/explore.png')}
-          renderingMode="template"
-        />
+      <NativeTabs.Trigger name="browse">
+        <Label>Browse</Label>
+        <Icon sf={{ default: 'bag', selected: 'bag.fill' }} />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="cart">
+        <Label>Cart</Label>
+        <Icon sf={{ default: 'cart', selected: 'cart.fill' }} />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="orders">
+        <Label>Orders</Label>
+        <Icon sf={{ default: 'shippingbox', selected: 'shippingbox.fill' }} />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="profile">
+        <Label>Profile</Label>
+        <Icon sf={{ default: 'person', selected: 'person.fill' }} />
       </NativeTabs.Trigger>
     </NativeTabs>
   );
