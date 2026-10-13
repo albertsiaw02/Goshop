@@ -65,7 +65,7 @@ export default function SignupScreen() {
           </View>
 
           <Pressable className="flex-row items-center gap-2 mt-1" onPress={() => setAgreeTerms(!agreeTerms)} hitSlop={8}>
-            <View className={`h-5 w-5 rounded border items-center justify-center ${agreeTerms ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300'}`}>
+            <View className={`h-5 w-5 rounded border items-center justify-center ${agreeTerms ? 'bg-brand-500 border-brand-500' : 'border-slate-300'}`}>
               {agreeTerms && <Ionicons name="checkmark" size={14} color="#fff" />}
             </View>
             <Text className="text-sm text-slate-500">I agree with the Terms and Conditions</Text>
@@ -75,7 +75,7 @@ export default function SignupScreen() {
             style={({ pressed }) => (pressed ? { opacity: 0.9 } : undefined)}
             onPress={() => router.replace('/(tabs)')}
             className="mt-4 overflow-hidden rounded-2xl">
-            <LinearGradient colors={['#10b981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+            <LinearGradient colors={['#16a34a', '#15803d']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
               <View className="items-center py-4">
                 <Text className="text-[18px] font-bold text-white shadow-sm">Sign Up</Text>
               </View>
@@ -104,7 +104,7 @@ export default function SignupScreen() {
         <View className="mt-8 flex-row justify-center items-center">
           <Text className="text-sm text-slate-500">Already have an account? </Text>
           <Pressable onPress={() => router.push('/(onboarding)/login')} hitSlop={8}>
-            <Text className="text-sm font-bold text-emerald-500">Sign in</Text>
+            <Text className="text-sm font-bold text-brand-600">Sign in</Text>
           </Pressable>
         </View>
       </SafeAreaView>

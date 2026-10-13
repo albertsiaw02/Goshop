@@ -20,11 +20,11 @@ const TEXT_BY_TYPE: Record<NonNullable<ThemedTextProps['type']>, string> = {
 };
 
 const TEXT_COLOR_BY_THEME: Record<ThemeColor, string> = {
-  text: 'text-content dark:text-content-dark',
-  textSecondary: 'text-muted dark:text-muted-dark',
-  background: 'text-background dark:text-background-dark',
-  backgroundElement: 'text-element dark:text-element-dark',
-  backgroundSelected: 'text-selected dark:text-selected-dark',
+  text: 'text-content',
+  textSecondary: 'text-muted',
+  background: 'text-background',
+  backgroundElement: 'text-element',
+  backgroundSelected: 'text-selected',
 };
 
 export function ThemedText({
@@ -34,7 +34,7 @@ export function ThemedText({
   className = '',
   ...rest
 }: ThemedTextProps) {
-  const color = themeColor ? TEXT_COLOR_BY_THEME[themeColor] : 'text-content dark:text-content-dark';
+  const color = themeColor ? TEXT_COLOR_BY_THEME[themeColor] : 'text-content';
 
   return (
     <Text className={`${TEXT_BY_TYPE[type]} ${color} ${className}`.trim()} style={style} {...rest} />

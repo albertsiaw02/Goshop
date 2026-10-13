@@ -37,7 +37,7 @@ export default function HomeScreen() {
             <View style={styles.header}>
               <View style={styles.location}>
                 <View style={styles.locationIcon}>
-                  <Ionicons name="location" size={17} color="#168443" />
+                  <Ionicons name="location" size={17} color="#16a34a" />
                 </View>
                 <View>
                   <Text style={[styles.eyebrow, { color: theme.textSecondary }]}>DELIVERING TO</Text>
@@ -69,7 +69,7 @@ export default function HomeScreen() {
               <Ionicons name="search-outline" size={20} color={theme.textSecondary} />
               <Text style={[styles.searchPlaceholder, { color: theme.textSecondary }]}>Search fresh groceries</Text>
               <View style={styles.searchDivider} />
-              <Ionicons name="options-outline" size={19} color="#168443" />
+              <Ionicons name="options-outline" size={19} color="#16a34a" />
             </Pressable>
 
             <PromotionCarousel />
@@ -147,7 +147,7 @@ export default function HomeScreen() {
 
             <View style={[styles.deliveryStrip, { backgroundColor: theme.backgroundElement }]}>
               <View style={styles.deliveryIcon}>
-                <Ionicons name="flash" size={17} color="#168443" />
+                <Ionicons name="flash" size={17} color="#16a34a" />
               </View>
               <View style={styles.deliveryCopy}>
                 <Text style={[styles.deliveryTitle, { color: theme.text }]}>Fresh to your door</Text>
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#e8f5ec',
+    backgroundColor: '#dcfce7',
   },
   eyebrow: {
     fontSize: 9,
@@ -241,6 +241,8 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#e2e8f0',
   },
   cartDot: {
     position: 'absolute',
@@ -249,7 +251,7 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: '#21a453',
+    backgroundColor: '#16a34a',
     borderWidth: 1,
     borderColor: '#ffffff',
   },
@@ -261,6 +263,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 11,
     marginBottom: 20,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#e2e8f0',
   },
   searchPlaceholder: {
     flex: 1,
@@ -269,7 +273,7 @@ const styles = StyleSheet.create({
   searchDivider: {
     width: 1,
     height: 21,
-    backgroundColor: '#d7ddd8',
+    backgroundColor: '#e2e8f0',
     marginHorizontal: 2,
   },
   section: {
@@ -291,7 +295,7 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   seeAll: {
-    color: '#168443',
+    color: '#16a34a',
     fontSize: 12,
     fontWeight: '700',
   },
@@ -380,7 +384,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: '#dff1e4',
+    backgroundColor: '#dcfce7',
     alignItems: 'center',
     justifyContent: 'center',
   },

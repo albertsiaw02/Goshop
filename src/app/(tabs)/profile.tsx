@@ -27,8 +27,8 @@ function ProfileRow({ icon, label, value, onPress }: ProfileRowProps) {
   const theme = useTheme();
   const content = (
     <>
-      <View className="h-10 w-10 items-center justify-center rounded-xl bg-white dark:bg-[#303236]">
-        <Ionicons name={icon} size={20} color="#168443" />
+      <View className="h-10 w-10 items-center justify-center rounded-xl bg-white">
+        <Ionicons name={icon} size={20} color="#16a34a" />
       </View>
       <ThemedText className="flex-1">{label}</ThemedText>
       {value ? (
@@ -64,8 +64,8 @@ function ProfileSection({
   children: ReactNode;
 }) {
   return (
-    <ThemedView type="backgroundElement" className="rounded-3xl px-5 py-3">
-      <ThemedText type="smallBold" className="mb-1 mt-2 text-[17px]">
+    <ThemedView type="backgroundElement" className="rounded-3xl border border-[#eef2f6] px-5 py-3">
+      <ThemedText type="smallBold" className="mb-1 mt-2 text-[16px]">
         {title}
       </ThemedText>
       {children}
@@ -106,8 +106,8 @@ export default function ProfileScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled">
         <View className="items-center pb-3 pt-2">
-          <View className="mb-3 h-[92px] w-[92px] items-center justify-center rounded-full bg-[#e8f4ec] dark:bg-[#183323]">
-            <Ionicons name="person" size={46} color="#168443" />
+          <View className="mb-3 h-[92px] w-[92px] items-center justify-center rounded-full bg-[#dcfce7]">
+            <Ionicons name="person" size={46} color="#16a34a" />
           </View>
           <ThemedText className="text-[25px] font-bold leading-8">{name}</ThemedText>
           <ThemedText themeColor="textSecondary" className="mt-1">
@@ -115,10 +115,10 @@ export default function ProfileScreen() {
           </ThemedText>
           <Pressable
             accessibilityRole="button"
-            className="mt-5 min-w-[150px] items-center rounded-full border border-[#168443] px-6 py-2.5"
+            className="mt-5 min-w-[150px] items-center rounded-full border border-[#16a34a] px-6 py-2.5"
             onPress={startEditing}
             style={({ pressed }) => (pressed ? { opacity: 0.65 } : undefined)}>
-            <ThemedText className="font-semibold text-[#168443]">Edit profile</ThemedText>
+            <ThemedText className="font-semibold text-[#15803d]">Edit profile</ThemedText>
           </Pressable>
         </View>
 
@@ -168,7 +168,7 @@ export default function ProfileScreen() {
             <TextInput
               accessibilityLabel="Name"
               autoCapitalize="words"
-              className="mb-4 rounded-xl border border-[#d9dedb] px-4 py-3 text-base text-content dark:border-[#45484d] dark:text-content-dark"
+              className="mb-4 rounded-xl border border-[#e2e8f0] bg-element px-4 py-3 text-base text-content"
               onChangeText={setDraftName}
               placeholder="Your name"
               placeholderTextColor={theme.textSecondary}
@@ -181,7 +181,7 @@ export default function ProfileScreen() {
               accessibilityLabel="Email"
               autoCapitalize="none"
               autoComplete="email"
-              className="mb-6 rounded-xl border border-[#d9dedb] px-4 py-3 text-base text-content dark:border-[#45484d] dark:text-content-dark"
+              className="mb-6 rounded-xl border border-[#e2e8f0] bg-element px-4 py-3 text-base text-content"
               keyboardType="email-address"
               onChangeText={setDraftEmail}
               placeholder="you@example.com"
@@ -191,13 +191,13 @@ export default function ProfileScreen() {
             <View className="flex-row gap-3">
               <Pressable
                 accessibilityRole="button"
-                className="flex-1 items-center rounded-xl border border-[#168443] py-3"
+                className="flex-1 items-center rounded-xl border border-[#16a34a] py-3"
                 onPress={() => setEditing(false)}>
-                <ThemedText className="font-semibold text-[#168443]">Cancel</ThemedText>
+                <ThemedText className="font-semibold text-[#15803d]">Cancel</ThemedText>
               </Pressable>
               <Pressable
                 accessibilityRole="button"
-                className="flex-1 items-center rounded-xl bg-[#168443] py-3"
+                className="flex-1 items-center rounded-xl bg-brand-500 py-3"
                 onPress={saveProfile}>
                 <ThemedText className="font-semibold text-white">Save</ThemedText>
               </Pressable>

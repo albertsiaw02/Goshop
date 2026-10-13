@@ -1,5 +1,6 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
-import { FlatList, TextInput, View } from 'react-native';
+import { FlatList, Text, TextInput, View } from 'react-native';
 
 import { ProductCard } from '@/components/product-card';
 import { ThemedText } from '@/components/themed-text';
@@ -21,18 +22,26 @@ export default function SearchScreen() {
 
   return (
     <ThemedView className="flex-1">
-      <View className="mx-auto flex-1 w-full max-w-[800px] p-6">
-        <TextInput
-          value={query}
-          onChangeText={setQuery}
-          autoFocus
-          placeholder="Search products…"
-          placeholderTextColor={theme.textSecondary}
-          className="mb-4 rounded-3xl bg-element px-4 py-4 text-base text-content dark:bg-element-dark dark:text-content-dark"
-        />
+      <View className="mx-auto w-full max-w-[800px] flex-1 p-6">
+        <View className="mb-2 flex-row items-center gap-3 rounded-2xl border border-[#eef2f6] bg-element px-4">
+          <Ionicons name="search-outline" size={19} color={theme.textSecondary} />
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            autoFocus
+            placeholder="Search products…"
+            placeholderTextColor={theme.textSecondary}
+            className="flex-1 py-4 text-base text-content"
+          />
+        </View>
+
+        <ThemedText type="small" themeColor="textSecondary" className="mb-4">
+          {results.length} {results.length === 1 ? 'product' : 'products'}
+        </ThemedText>
 
         {results.length === 0 ? (
           <View className="items-center pt-16">
+            <Text className="mb-3 text-[44px]">🔍</Text>
             <ThemedText themeColor="textSecondary">No results for “{query}”</ThemedText>
           </View>
         ) : (
@@ -41,8 +50,8 @@ export default function SearchScreen() {
             keyExtractor={(p) => p.id}
             numColumns={2}
             showsVerticalScrollIndicator={false}
-            columnWrapperStyle={{ gap: 16 }}
-            contentContainerStyle={{ gap: 16 }}
+            columnWrapperStyle={{ gap: 14 }}
+            contentContainerStyle={{ gap: 14, paddingBottom: 16 }}
             renderItem={({ item }) => (
               <View className="grow">
                 <ProductCard product={item} />

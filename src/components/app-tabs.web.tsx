@@ -47,7 +47,7 @@ function TabButton({
       {isFocused ? (
         <Text className="text-sm font-bold text-brand-600">{label}</Text>
       ) : (
-        <Text className="text-sm text-muted dark:text-muted-dark">{label}</Text>
+        <Text className="text-sm text-muted">{label}</Text>
       )}
     </Pressable>
   );

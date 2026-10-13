@@ -54,13 +54,13 @@ export default function LoginScreen() {
 
           <View className="flex-row items-center justify-between px-1">
             <Pressable className="flex-row items-center gap-2" onPress={() => setRememberMe(!rememberMe)} hitSlop={8}>
-              <View className={`h-5 w-5 rounded border items-center justify-center ${rememberMe ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300'}`}>
+              <View className={`h-5 w-5 rounded border items-center justify-center ${rememberMe ? 'bg-brand-500 border-brand-500' : 'border-slate-300'}`}>
                 {rememberMe && <Ionicons name="checkmark" size={14} color="#fff" />}
               </View>
               <Text className="text-sm text-slate-500">Remember me</Text>
             </Pressable>
             <Pressable hitSlop={8}>
-              <Text className="text-sm font-semibold text-emerald-500">Forget Password?</Text>
+              <Text className="text-sm font-semibold text-brand-600">Forget Password?</Text>
             </Pressable>
           </View>
 
@@ -68,7 +68,7 @@ export default function LoginScreen() {
             style={({ pressed }) => (pressed ? { opacity: 0.9 } : undefined)}
             onPress={() => router.replace('/(tabs)')}
             className="mt-4 overflow-hidden rounded-2xl">
-            <LinearGradient colors={['#10b981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+            <LinearGradient colors={['#16a34a', '#15803d']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
               <View className="items-center py-4">
                 <Text className="text-[18px] font-bold text-white shadow-sm">Log In</Text>
               </View>
@@ -97,7 +97,7 @@ export default function LoginScreen() {
         <View className="mt-8 flex-row justify-center items-center">
           <Text className="text-sm text-slate-500">Don't have an account? </Text>
           <Pressable onPress={() => router.push('/(onboarding)/signup')} hitSlop={8}>
-            <Text className="text-sm font-bold text-emerald-500">Sign up</Text>
+            <Text className="text-sm font-bold text-brand-600">Sign up</Text>
           </Pressable>
         </View>
       </SafeAreaView>
