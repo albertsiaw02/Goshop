@@ -1,8 +1,10 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { FlatList, Pressable, Text, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useTheme } from '@/hooks/use-theme';
 
 type Order = {
   id: string;
@@ -19,10 +21,12 @@ const ORDERS: Order[] = [
 ];
 
 export default function OrdersScreen() {
+  const theme = useTheme();
+
   return (
     <ThemedView className="flex-1">
-      <View className="flex-1 w-full max-w-[800px] self-center p-6">
-        <ThemedText type="subtitle" className="mb-4 pt-4">
+      <View className="w-full max-w-[800px] flex-1 self-center p-6">
+        <ThemedText className="mb-5 pt-4 text-[26px] font-extrabold leading-8 tracking-tight text-content">
           My Orders
         </ThemedText>
 
@@ -30,31 +34,50 @@ export default function OrdersScreen() {
           data={ORDERS}
           keyExtractor={(o) => o.id}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ gap: 16 }}
-          renderItem={({ item }) => (
-            <Pressable
-              style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
-              onPress={() =>
-                router.push({ pathname: '/order-tracking/[id]', params: { id: item.id } })
-              }>
-              <ThemedView type="backgroundElement" className="flex-row items-center gap-6 rounded-2xl p-6">
-                <Text className="text-[34px]">📦</Text>
-                <View className="flex-1 gap-0.5">
-                  <ThemedText type="smallBold">{item.id}</ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {item.date}
-                  </ThemedText>
-                  <ThemedText type="smallBold">${item.total.toFixed(2)}</ThemedText>
+          contentContainerStyle={{ gap: 12 }}
+          renderItem={({ item }) => {
+            const inTransit = item.status === 'In Transit';
+            return (
+              <Pressable
+                style={({ pressed }) => (pressed ? { opacity: 0.9 } : undefined)}
+                onPress={() =>
+                  router.push({ pathname: '/order-tracking/[id]', params: { id: item.id } })
+                }>
+                <View className="flex-row items-center gap-4 rounded-2xl border border-[#eef2f6] bg-white p-4">
+                  <View
+                    className="h-[52px] w-[52px] items-center justify-center rounded-2xl"
+                    style={{ backgroundColor: theme.backgroundElement }}>
+                    <Text className="text-[26px]">📦</Text>
+                  </View>
+                  <View className="flex-1 gap-1">
+                    <ThemedText type="smallBold" className="text-[14px]">
+                      {item.id}
+                    </ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {item.date}
+                    </ThemedText>
+                    <ThemedText type="smallBold" className="text-brand-600">
+                      ${item.total.toFixed(2)}
+                    </ThemedText>
+                  </View>
+                  <View className="items-end gap-2">
+                    <View
+                      className={`rounded-full px-2.5 py-1 ${
+                        inTransit ? 'bg-brand-50' : 'bg-[#e8f9ee]'
+                      }`}>
+                      <Text
+                        className={`text-[10px] font-bold ${
+                          inTransit ? 'text-brand-600' : 'text-success'
+                        }`}>
+                        {item.status}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={16} color={theme.textSecondary} />
+                  </View>
                 </View>
-                <Text
-                  className={`text-sm font-bold ${
-                    item.status === 'In Transit' ? 'text-brand-600' : 'text-success'
-                  }`}>
-                  {item.status}
-                </Text>
-              </ThemedView>
-            </Pressable>
-          )}
+              </Pressable>
+            );
+          }}
         />
       </View>
     </ThemedView>

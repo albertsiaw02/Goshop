@@ -72,7 +72,8 @@ export default function BrowseScreen() {
                       style={[
                         styles.chip,
                         {
-                          backgroundColor: selected ? '#e8f5ec' : theme.backgroundElement,
+                          backgroundColor: selected ? '#dcfce7' : theme.backgroundElement,
+                          borderColor: selected ? '#bbf7d0' : 'transparent',
                         },
                       ]}>
                       <Text style={styles.chipEmoji}>{item.emoji}</Text>
@@ -148,6 +149,8 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#e2e8f0',
   },
   cartDot: {
     position: 'absolute',
@@ -156,7 +159,7 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: '#21a453',
+    backgroundColor: '#16a34a',
     borderWidth: 1,
     borderColor: '#ffffff',
   },
@@ -168,6 +171,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 11,
     marginBottom: 20,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#e2e8f0',
   },
   searchPlaceholder: {
     flex: 1,
@@ -214,7 +219,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   chipTextSelected: {
-    color: '#168443',
+    color: '#15803d',
     fontWeight: '700',
   },
   productGrid: {

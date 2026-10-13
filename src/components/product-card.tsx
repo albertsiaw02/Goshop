@@ -6,32 +6,37 @@ import { useTheme } from '@/hooks/use-theme';
 
 import type { Product } from '@/data/products';
 
+const CATEGORY_TINT: Record<string, string> = {
+  fruits: '#fff1f2',
+  vegetables: '#f0fdf4',
+  dairy: '#eff6ff',
+  bakery: '#fffbeb',
+  meat: '#fef2f2',
+  snacks: '#fefce8',
+  drinks: '#eef2ff',
+};
+
 export function ProductCard({ product }: { product: Product }) {
   const theme = useTheme();
+  const tint = CATEGORY_TINT[product.category] ?? '#f1f5f9';
 
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`View ${product.name}`}
-      style={({ pressed }) => [
-        styles.card,
-        {
-          backgroundColor: theme.background,
-          borderColor: theme.backgroundElement,
-        },
-        pressed && styles.pressed,
-      ]}
+      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
       onPress={() => router.push({ pathname: '/product/[id]', params: { id: product.id } })}>
-      <View style={styles.imageWrap}>
+      <View style={[styles.imageWrap, { backgroundColor: tint }]}>
         <Text style={styles.emoji}>{product.emoji}</Text>
-        <View style={styles.tag}>
-          <Text style={styles.tagText}>{product.category.toUpperCase()}</Text>
-        </View>
-        <View style={styles.favourite}>
-          <Ionicons name="heart-outline" size={16} color="#33423a" />
-        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Save ${product.name}`}
+          hitSlop={6}
+          style={styles.favourite}>
+          <Ionicons name="heart-outline" size={15} color="#475569" />
+        </Pressable>
         <View style={styles.add}>
-          <Ionicons name="add" size={21} color="#ffffff" />
+          <Ionicons name="add" size={20} color="#ffffff" />
         </View>
       </View>
       <View style={styles.info}>
@@ -42,7 +47,7 @@ export function ProductCard({ product }: { product: Product }) {
           {product.weight} · {product.category}
         </Text>
         <View style={styles.priceRow}>
-          <Text style={[styles.price, { color: theme.text }]}>${product.price.toFixed(2)}</Text>
+          <Text style={styles.price}>${product.price.toFixed(2)}</Text>
           <Text style={[styles.unit, { color: theme.textSecondary }]}>/ {product.unit}</Text>
         </View>
       </View>
@@ -53,33 +58,24 @@ export function ProductCard({ product }: { product: Product }) {
 const styles = StyleSheet.create({
   card: {
     overflow: 'hidden',
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#e8edf2',
+    backgroundColor: '#ffffff',
+    shadowColor: '#0f172a',
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 2,
   },
   imageWrap: {
     aspectRatio: 1,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f1f4ef',
   },
   emoji: {
-    fontSize: 46,
-  },
-  tag: {
-    position: 'absolute',
-    top: 9,
-    left: 9,
-    paddingHorizontal: 7,
-    paddingVertical: 4,
-    borderRadius: 6,
-    backgroundColor: 'rgba(255,255,255,0.92)',
-  },
-  tagText: {
-    color: '#3b754e',
-    fontSize: 8,
-    fontWeight: '800',
-    letterSpacing: 0.45,
+    fontSize: 50,
   },
   favourite: {
     position: 'absolute',
@@ -88,7 +84,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.92)',
+    backgroundColor: 'rgba(255,255,255,0.9)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -96,29 +92,30 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 9,
     bottom: 9,
-    width: 32,
-    height: 32,
+    width: 34,
+    height: 34,
     borderRadius: 12,
-    backgroundColor: '#1b9a4b',
+    backgroundColor: '#16a34a',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#137c3a',
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
+    shadowColor: '#15803d',
+    shadowOpacity: 0.28,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
     elevation: 3,
   },
   info: {
-    paddingHorizontal: 11,
-    paddingTop: 9,
-    paddingBottom: 11,
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 12,
   },
   name: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
+    letterSpacing: -0.1,
   },
   weight: {
-    fontSize: 10,
+    fontSize: 10.5,
     marginTop: 3,
     textTransform: 'capitalize',
   },
@@ -126,16 +123,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'baseline',
     gap: 3,
-    marginTop: 8,
+    marginTop: 9,
   },
   price: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '800',
+    color: '#15803d',
+    letterSpacing: -0.2,
   },
   unit: {
-    fontSize: 9,
+    fontSize: 9.5,
   },
   pressed: {
-    opacity: 0.84,
+    opacity: 0.9,
   },
 });

@@ -80,7 +80,7 @@ function SwipeToGetStarted({ onComplete }: { onComplete: () => void }) {
         {/* Left sliding thumb (animated) */}
         <Animated.View
           style={[animatedThumbStyle]}
-          className="absolute left-1.5 top-1.5 bottom-1.5 w-12 h-12 items-center justify-center rounded-full bg-emerald-500 z-10">
+          className="absolute left-1.5 top-1.5 bottom-1.5 w-12 h-12 items-center justify-center rounded-full bg-brand-500 z-10">
           <Ionicons name="chevron-forward" size={20} color="#fff" />
         </Animated.View>
 
@@ -88,7 +88,7 @@ function SwipeToGetStarted({ onComplete }: { onComplete: () => void }) {
         <View className="flex-1 items-center justify-center">
           <Animated.Text
             style={[animatedLabelStyle]}
-            className="text-base font-bold text-content dark:text-content-dark">
+            className="text-base font-bold text-content">
             Get Started
           </Animated.Text>
         </View>
@@ -96,7 +96,7 @@ function SwipeToGetStarted({ onComplete }: { onComplete: () => void }) {
         {/* Right check circle */}
         <View className="absolute right-2 top-1.5 bottom-1.5 items-center justify-center">
           <View className="h-10 w-10 items-center justify-center rounded-full border border-white bg-white/0">
-            <Ionicons name="checkmark" size={18} color="#10b981" />
+            <Ionicons name="checkmark" size={18} color="#16a34a" />
           </View>
         </View>
       </View>

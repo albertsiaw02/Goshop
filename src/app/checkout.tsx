@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
@@ -23,56 +24,67 @@ export default function CheckoutScreen() {
   return (
     <ThemedView className="flex-1">
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <View className="mx-auto w-full max-w-[800px] gap-8 p-6">
-          <View className="gap-2">
-            <Text className="mb-0.5 text-base font-bold text-content dark:text-content-dark">
+        <View className="mx-auto w-full max-w-[800px] gap-5 p-6">
+          <View className="gap-3 rounded-3xl border border-[#eef2f6] bg-white p-5">
+            <ThemedText type="smallBold" className="text-[14px]">
               Delivery Address
-            </Text>
-            <TextInput
-              value={address}
-              onChangeText={setAddress}
-              placeholderTextColor={theme.textSecondary}
-              className="rounded-lg bg-element px-4 py-4 text-base text-content dark:bg-element-dark dark:text-content-dark"
-            />
+            </ThemedText>
+            <View className="flex-row items-center gap-3 rounded-2xl border border-[#eef2f6] bg-element px-4">
+              <Ionicons name="location-outline" size={18} color={theme.textSecondary} />
+              <TextInput
+                value={address}
+                onChangeText={setAddress}
+                placeholderTextColor={theme.textSecondary}
+                className="flex-1 py-4 text-base text-content"
+              />
+            </View>
           </View>
 
-          <View className="gap-2">
-            <Text className="mb-0.5 text-base font-bold text-content dark:text-content-dark">
+          <View className="gap-3 rounded-3xl border border-[#eef2f6] bg-white p-5">
+            <ThemedText type="smallBold" className="text-[14px]">
               Payment
-            </Text>
-            <TextInput
-              value={payment}
-              onChangeText={setPayment}
-              placeholderTextColor={theme.textSecondary}
-              className="rounded-lg bg-element px-4 py-4 text-base text-content dark:bg-element-dark dark:text-content-dark"
-            />
+            </ThemedText>
+            <View className="flex-row items-center gap-3 rounded-2xl border border-[#eef2f6] bg-element px-4">
+              <Ionicons name="card-outline" size={18} color={theme.textSecondary} />
+              <TextInput
+                value={payment}
+                onChangeText={setPayment}
+                placeholderTextColor={theme.textSecondary}
+                className="flex-1 py-4 text-base text-content"
+              />
+            </View>
           </View>
 
-          <View className="gap-2">
-            <Text className="mb-0.5 text-base font-bold text-content dark:text-content-dark">
+          <View className="gap-3 rounded-3xl border border-[#eef2f6] bg-white p-5">
+            <ThemedText type="smallBold" className="text-[14px]">
               Order Summary
-            </Text>
+            </ThemedText>
             <View className="flex-row justify-between py-0.5">
-              <ThemedText>Subtotal</ThemedText>
-              <ThemedText>${subtotal.toFixed(2)}</ThemedText>
+              <ThemedText themeColor="textSecondary">Subtotal</ThemedText>
+              <ThemedText type="smallBold">${subtotal.toFixed(2)}</ThemedText>
             </View>
             <View className="flex-row justify-between py-0.5">
-              <ThemedText>Delivery</ThemedText>
-              <ThemedText>${delivery.toFixed(2)}</ThemedText>
+              <ThemedText themeColor="textSecondary">Delivery</ThemedText>
+              <ThemedText type="smallBold">${delivery.toFixed(2)}</ThemedText>
             </View>
-            <View className="mb-4 flex-row justify-between pt-1">
-              <ThemedText type="smallBold">Total</ThemedText>
-              <ThemedText type="smallBold">${total.toFixed(2)}</ThemedText>
-            </View>
-
-            <Pressable
-              style={({ pressed }) => (pressed ? { opacity: 0.7 } : undefined)}
-              onPress={placeOrder}>
-              <View className="items-center rounded-3xl bg-brand-500 py-4">
-                <Text className="text-[18px] font-bold text-white">Place Order</Text>
+            <View className="mt-1 border-t border-[#eef2f6] pt-3">
+              <View className="flex-row justify-between">
+                <ThemedText className="font-extrabold text-[16px]">Total</ThemedText>
+                <ThemedText className="font-extrabold text-[16px] text-brand-600">
+                  ${total.toFixed(2)}
+                </ThemedText>
               </View>
-            </Pressable>
+            </View>
           </View>
+
+          <Pressable
+            style={({ pressed }) => (pressed ? { opacity: 0.85 } : undefined)}
+            onPress={placeOrder}>
+            <View className="flex-row items-center justify-center gap-2 rounded-2xl bg-brand-500 py-4">
+              <Ionicons name="lock-closed-outline" size={17} color="#ffffff" />
+              <Text className="text-[16px] font-bold text-white">Place Order</Text>
+            </View>
+          </Pressable>
         </View>
       </ScrollView>
     </ThemedView>

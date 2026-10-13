@@ -28,12 +28,16 @@ export default function OrderTrackingScreen() {
       <Stack.Screen options={{ title: `Order ${id ?? ''}` }} />
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="mx-auto w-full max-w-[800px] gap-4 p-6 pt-6">
-          <ThemedText type="subtitle">Order {id}</ThemedText>
-          <ThemedText themeColor="textSecondary" className="mb-4">
+          <ThemedText className="text-[26px] font-extrabold leading-8 tracking-tight">
+            Order {id}
+          </ThemedText>
+          <ThemedText type="small" themeColor="textSecondary" className="mb-2">
             Estimated delivery in 45 min
           </ThemedText>
 
-          <ThemedView type="backgroundElement" className="rounded-3xl p-6">
+          <ThemedView
+            type="backgroundElement"
+            className="rounded-3xl border border-[#eef2f6] p-6">
             {STEPS.map((step, index) => {
               const done = index <= currentStep;
               const isLast = index === STEPS.length - 1;
@@ -42,14 +46,14 @@ export default function OrderTrackingScreen() {
                   <View className="w-8 items-center">
                     <View
                       className={`h-8 w-8 items-center justify-center rounded-full ${
-                        done ? 'bg-brand-500' : 'bg-selected dark:bg-selected-dark'
+                        done ? 'bg-brand-500' : 'bg-selected'
                       }`}>
-                      <Text className="text-[16px]">{step.emoji}</Text>
+                      <Text className="text-[15px]">{step.emoji}</Text>
                     </View>
                     {!isLast && (
                       <View
                         className={`min-h-[34px] w-0.5 flex-1 ${
-done ? 'bg-brand-500' : 'bg-selected dark:bg-selected-dark'
+                          done ? 'bg-brand-500' : 'bg-selected'
                         }`}
                       />
                     )}
@@ -65,8 +69,12 @@ done ? 'bg-brand-500' : 'bg-selected dark:bg-selected-dark'
             })}
           </ThemedView>
 
-          <ThemedView type="backgroundElement" className="flex-row items-center gap-4 rounded-3xl p-4">
-            <Text className="text-[34px]">🛵</Text>
+          <ThemedView
+            type="backgroundElement"
+            className="flex-row items-center gap-4 rounded-3xl border border-[#eef2f6] p-4">
+            <View className="h-[52px] w-[52px] items-center justify-center rounded-2xl bg-white">
+              <Text className="text-[26px]">🛵</Text>
+            </View>
             <View className="flex-1 gap-0.5">
               <ThemedText type="smallBold">Your courier is on the way</ThemedText>
               <ThemedText type="small" themeColor="textSecondary">
@@ -77,7 +85,7 @@ done ? 'bg-brand-500' : 'bg-selected dark:bg-selected-dark'
           </ThemedView>
 
           <View className="pt-4">
-            <ThemedText themeColor="textSecondary">
+            <ThemedText type="small" themeColor="textSecondary">
               Need help? Contact support or view delivery details from the orders tab.
             </ThemedText>
           </View>

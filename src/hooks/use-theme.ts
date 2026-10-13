@@ -1,13 +1,10 @@
 /**
- * Learn more about light and dark modes:
- * https://docs.expo.dev/guides/color-schemes/
+ * The app uses a single light theme with a white background.
+ * See https://docs.expo.dev/guides/color-schemes/ for details on color schemes.
  */
 
 import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export function useTheme() {
-  const scheme = useColorScheme();
-
-  return scheme === 'dark' ? Colors.dark : Colors.light;
+  return Colors.light;
 }
