@@ -17,7 +17,7 @@ const STORES = [
   { name: 'Local Harvest', mark: 'L', color: '#f9e9e8', ink: '#b5544c' },
 ];
 
-const FEATURED_PRODUCT_IDS = ['6', '3', '5', '4', '1', '2'];
+const FEATURED_PRODUCT_IDS = ['5', '4', '2', '6'];
 
 export default function HomeScreen() {
   const theme = useTheme();
