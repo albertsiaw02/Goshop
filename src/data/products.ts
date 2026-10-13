@@ -7,6 +7,7 @@ export type Product = {
   weight: string;
   emoji: string;
   description: string;
+  mrp?: number;
 };
 
 export const CATEGORIES = [
@@ -20,12 +21,12 @@ export const CATEGORIES = [
 ] as const;
 
 export const PRODUCTS: Product[] = [
-  { id: '1', name: 'Fresh Apple', category: 'fruits', price: 2.5, unit: 'kg', weight: '1 kg', emoji: '🍎', description: 'Crisp and juicy red apples, perfect for a healthy snack.' },
-  { id: '2', name: 'Banana', category: 'fruits', price: 1.2, unit: 'kg', weight: '1 kg', emoji: '🍌', description: 'Naturally sweet bananas packed with potassium.' },
-  { id: '3', name: 'Orange', category: 'fruits', price: 3.0, unit: 'kg', weight: '1 kg', emoji: '🍊', description: 'Tangy and sweet oranges, rich in vitamin C.' },
-  { id: '4', name: 'Broccoli', category: 'vegetables', price: 1.8, unit: 'piece', weight: '500 g', emoji: '🥦', description: 'Fresh green broccoli, great steamed or roasted.' },
-  { id: '5', name: 'Tomato', category: 'vegetables', price: 2.0, unit: 'kg', weight: '1 kg', emoji: '🍅', description: 'Ripe red tomatoes ideal for salads and sauces.' },
-  { id: '6', name: 'Carrot', category: 'vegetables', price: 1.1, unit: 'kg', weight: '1 kg', emoji: '🥕', description: 'Sweet crunchy carrots, rich in beta-carotene.' },
+  { id: '1', name: 'Fresh Apples', category: 'fruits', price: 75, unit: 'piece', weight: '300g', emoji: '🍎', description: 'Crisp and juicy red apples, perfect for a healthy snack.', mrp: 90 },
+  { id: '2', name: 'Organic Spinach', category: 'vegetables', price: 20, unit: 'bundle', weight: '300g', emoji: '🌿', description: 'Fresh leafy spinach, rich in iron and vitamins.', mrp: 30 },
+  { id: '3', name: 'Sweet Oranges', category: 'fruits', price: 30, unit: 'piece', weight: '300g', emoji: '🍊', description: 'Tangy and sweet oranges, rich in vitamin C.', mrp: 40 },
+  { id: '4', name: 'Organic Lettuce', category: 'vegetables', price: 25, unit: 'bundle', weight: '300g', emoji: '🥬', description: 'Crisp lettuce perfect for salads and sandwiches.', mrp: 30 },
+  { id: '5', name: 'Fresh Tomatoes', category: 'vegetables', price: 20, unit: 'kg', weight: '300g', emoji: '🍅', description: 'Ripe red tomatoes ideal for salads and sauces.', mrp: 30 },
+  { id: '6', name: 'Raw Sweet Corn', category: 'vegetables', price: 25, unit: 'piece', weight: '300g', emoji: '🌽', description: 'Sweet and juicy corn, perfect for grilling or boiling.', mrp: 30 },
   { id: '7', name: 'Whole Milk', category: 'dairy', price: 1.5, unit: 'L', weight: '1 L', emoji: '🥛', description: 'Fresh pasteurized whole milk.' },
   { id: '8', name: 'Free-Range Eggs', category: 'dairy', price: 3.4, unit: 'dozen', weight: '12 pcs', emoji: '🥚', description: 'Pasture-raised brown eggs from local farms.' },
   { id: '9', name: 'Cheddar Cheese', category: 'dairy', price: 4.2, unit: 'pack', weight: '250 g', emoji: '🧀', description: 'Aged sharp cheddar, perfect for sandwiches.' },
