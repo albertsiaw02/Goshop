@@ -9,9 +9,11 @@ import { PromotionCarousel } from '@/components/promotion-carousel';
 import { ThemedView } from '@/components/themed-view';
 import { CATEGORIES, getProductsByCategory, PRODUCTS } from '@/data/products';
 import { useTheme } from '@/hooks/use-theme';
+import { useCart } from '@/store/cart';
 
 export default function BrowseScreen() {
   const theme = useTheme();
+  const { count } = useCart();
   const { width: screenWidth } = useWindowDimensions();
   const contentWidth = Math.min(screenWidth, 680) - 40;
   const [gridWidth, setGridWidth] = useState<number | null>(null);
@@ -44,11 +46,15 @@ export default function BrowseScreen() {
               </View>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Open cart"
+                accessibilityLabel={`Open cart, ${count} items`}
                 onPress={() => router.push('/(tabs)/cart')}
                 style={[styles.cartButton, { backgroundColor: theme.backgroundElement }]}>
                 <Ionicons name="bag-outline" size={21} color={theme.text} />
-                <View style={styles.cartDot} />
+                {count > 0 && (
+                  <View style={styles.cartBadge}>
+                    <Text style={styles.cartBadgeText}>{count > 99 ? '99+' : count}</Text>
+                  </View>
+                )}
               </Pressable>
             </View>
 
@@ -148,7 +154,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 32,
+    paddingBottom: 96,
   },
   content: {
     width: '100%',
@@ -191,6 +197,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#16a34a',
     borderWidth: 1,
     borderColor: '#ffffff',
+  },
+  cartBadge: {
+    position: 'absolute',
+    right: -5,
+    top: -5,
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    paddingHorizontal: 5,
+    backgroundColor: '#16a34a',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#ffffff',
+  },
+  cartBadgeText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: '800',
   },
   searchBar: {
     minHeight: 50,

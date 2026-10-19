@@ -46,7 +46,7 @@ const PROMOTIONS: Promotion[] = [
 ];
 
 const photoUrl = (id: string, width: number) =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${width}&q=80`;
+  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${width}&q=90`;
 
 export function PromotionCarousel({ compact = false }: { compact?: boolean }) {
   const scrollRef = useRef<ScrollView>(null);
@@ -102,7 +102,8 @@ export function PromotionCarousel({ compact = false }: { compact?: boolean }) {
               style={StyleSheet.absoluteFill}
             />
             <LinearGradient
-              colors={['rgba(10, 62, 34, 0.96)', 'rgba(14, 82, 42, 0.78)', 'rgba(14, 82, 42, 0.05)']}
+              colors={['rgba(10, 62, 34, 0.92)', 'rgba(14, 82, 42, 0.55)', 'rgba(14, 82, 42, 0)']}
+              locations={[0, 0.55, 1]}
               start={{ x: 0, y: 0.5 }}
               end={{ x: 1, y: 0.5 }}
               style={StyleSheet.absoluteFill}
