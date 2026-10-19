@@ -19,7 +19,6 @@ export default function RootLayout() {
         }}>
         <Stack.Screen name="(onboarding)" />
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="search" options={{ headerShown: true, title: 'Search' }} />
         <Stack.Screen name="product/[id]" options={{ headerShown: true, title: 'Product' }} />
         <Stack.Screen name="checkout" options={{ headerShown: true, title: 'Checkout' }} />
         <Stack.Screen name="order-tracking/[id]" options={{ headerShown: true, title: 'Order' }} />

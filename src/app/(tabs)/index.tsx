@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, Pressable, View, useWindowDimensions } from 'react-native';
+import { useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, Text, Pressable, TextInput, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ProductCard } from '@/components/product-card';
@@ -25,6 +25,15 @@ export default function HomeScreen() {
   const contentWidth = Math.min(screenWidth, 680) - 40;
   const [gridWidth, setGridWidth] = useState<number | null>(null);
   const productCardWidth = gridWidth ? (gridWidth - 8) / 2 : 0;
+  const [query, setQuery] = useState('');
+  const searchQuery = query.trim();
+  const searchResults = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    if (!q) return [];
+    return PRODUCTS.filter(
+      (p) => p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q),
+    );
+  }, [searchQuery]);
   const featured = FEATURED_PRODUCT_IDS.map((id) => PRODUCTS.find((product) => product.id === id)!).filter(
     Boolean,
   );
@@ -62,17 +71,60 @@ export default function HomeScreen() {
               </Pressable>
             </View>
 
-            <Pressable
+            <View
               accessibilityRole="search"
-              onPress={() => router.push('/search')}
               style={[styles.searchBar, { backgroundColor: theme.backgroundElement }]}>
               <Ionicons name="search-outline" size={20} color={theme.textSecondary} />
-              <Text style={[styles.searchPlaceholder, { color: theme.textSecondary }]}>Search fresh groceries</Text>
-              <View style={styles.searchDivider} />
-              <Ionicons name="options-outline" size={19} color="#16a34a" />
-            </Pressable>
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder="Search fresh groceries"
+                placeholderTextColor={theme.textSecondary}
+                style={[styles.searchInput, { color: theme.text }]}
+                returnKeyType="search"
+              />
+              {searchQuery.length > 0 ? (
+                <Pressable accessibilityRole="button" accessibilityLabel="Clear search" onPress={() => setQuery('')} hitSlop={8}>
+                  <Ionicons name="close-circle" size={18} color={theme.textSecondary} />
+                </Pressable>
+              ) : (
+                <>
+                  <View style={styles.searchDivider} />
+                  <Ionicons name="options-outline" size={19} color="#16a34a" />
+                </>
+              )}
+            </View>
 
-            <PromotionCarousel />
+            {searchQuery.length > 0 ? (
+              <View style={styles.section}>
+                <View style={styles.sectionHeading}>
+                  <View>
+                    <Text style={[styles.sectionTitle, { color: theme.text }]}>Search results</Text>
+                    <Text style={[styles.sectionSubtitle, { color: theme.textSecondary }]}>
+                      {searchResults.length} {searchResults.length === 1 ? 'product' : 'products'} for “{searchQuery}”
+                    </Text>
+                  </View>
+                </View>
+                {searchResults.length === 0 ? (
+                  <View style={styles.emptyState}>
+                    <Text style={styles.emptyEmoji}>🔍</Text>
+                    <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
+                      No results for “{searchQuery}”
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={styles.productGrid} onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}>
+                    {searchResults.map((product) => (
+                      <View key={product.id} style={{ width: productCardWidth }}>
+                        <ProductCard product={product} />
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+            ) : (
+              <>
+                <PromotionCarousel />
 
             <View style={styles.section}>
               <View style={styles.sectionHeading}>
@@ -178,6 +230,8 @@ export default function HomeScreen() {
                 ))}
               </View>
             </View>
+              </>
+            )}
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -266,9 +320,10 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: '#e2e8f0',
   },
-  searchPlaceholder: {
+  searchInput: {
     flex: 1,
     fontSize: 13,
+    padding: 0,
   },
   searchDivider: {
     width: 1,
@@ -404,5 +459,18 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'flex-start',
     gap: 8,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingTop: 40,
+    paddingBottom: 20,
+  },
+  emptyEmoji: {
+    fontSize: 44,
+    marginBottom: 10,
+  },
+  emptyText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
 });
