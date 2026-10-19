@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Ellipse, G, Path } from 'react-native-svg';
 
 import { useTheme } from '@/hooks/use-theme';
+import { useCart } from '@/store/cart';
 
 import type { Product } from '@/data/products';
 
@@ -115,6 +116,7 @@ function ProductArt({ product }: { product: Product }) {
 
 export function ProductCard({ product }: { product: Product }) {
   const theme = useTheme();
+  const { addItem } = useCart();
   const tint = CATEGORY_TINT[product.category] ?? '#f1f5f9';
   const mrp = product.mrp ?? product.price * 1.45;
   const isFreshTomato = product.id === '5';
@@ -152,7 +154,10 @@ export function ProductCard({ product }: { product: Product }) {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`Add ${product.name}`}
-            onPress={(event) => event.stopPropagation()}
+            onPress={(event) => {
+              event.stopPropagation();
+              addItem(product.id);
+            }}
             style={styles.addButton}>
             <Ionicons name="add" size={19} color="#ffffff" />
           </Pressable>
@@ -179,6 +184,9 @@ const styles = StyleSheet.create({
   },
   imageWrap: {
     height: 130,
+    margin: 8,
+    marginBottom: 0,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',

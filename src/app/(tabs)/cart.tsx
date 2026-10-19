@@ -1,31 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useState } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { getProductById } from '@/data/products';
 import { useTheme } from '@/hooks/use-theme';
-
-type CartItem = { id: string; qty: number };
-
-const INITIAL: CartItem[] = [
-  { id: '1', qty: 2 },
-  { id: '7', qty: 1 },
-  { id: '15', qty: 3 },
-];
+import { useCart } from '@/store/cart';
 
 export default function CartScreen() {
   const theme = useTheme();
-  const [items, setItems] = useState<CartItem[]>(INITIAL);
-
-  const setQty = (id: string, delta: number) => {
-    setItems((prev) =>
-      prev
-        .map((item) => (item.id === id ? { ...item, qty: Math.max(0, item.qty + delta) } : item))
-        .filter((item) => item.qty > 0),
-    );
+  const { items, setQty } = useCart();
+  const deltaQty = (id: string, delta: number) => {
+    const item = items.find((line) => line.id === id);
+    if (!item) return;
+    setQty(id, item.qty + delta);
   };
 
   const rows = items
@@ -92,7 +81,7 @@ export default function CartScreen() {
                       accessibilityRole="button"
                       accessibilityLabel="Decrease quantity"
                       className="h-7 w-7 items-center justify-center rounded-full"
-                      onPress={() => setQty(r.product!.id, -1)}>
+                      onPress={() => deltaQty(r.product!.id, -1)}>
                       <Ionicons name="remove" size={16} color={theme.text} />
                     </Pressable>
                     <ThemedText type="smallBold">{r.item.qty}</ThemedText>
@@ -100,7 +89,7 @@ export default function CartScreen() {
                       accessibilityRole="button"
                       accessibilityLabel="Increase quantity"
                       className="h-7 w-7 items-center justify-center rounded-full bg-brand-500"
-                      onPress={() => setQty(r.product!.id, 1)}>
+                      onPress={() => deltaQty(r.product!.id, 1)}>
                       <Ionicons name="add" size={16} color="#ffffff" />
                     </Pressable>
                   </View>
