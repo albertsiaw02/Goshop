@@ -34,6 +34,7 @@ export default function RootLayout() {
             name="order-tracking/[id]"
             options={{ headerShown: false }}
           />
+          <Stack.Screen name="settings" options={{ headerShown: false }} />
         </Stack>
       </CartProvider>
     </GestureHandlerRootView>

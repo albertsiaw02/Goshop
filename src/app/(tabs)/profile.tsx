@@ -132,6 +132,11 @@ export default function ProfileScreen() {
         </ProfileSection>
 
         <ProfileSection title="Preferences">
+          <ProfileRow
+            icon="settings-outline"
+            label="Account settings"
+            onPress={() => router.push('/settings')}
+          />
           <ProfileRow icon="location-outline" label="Delivery address" value="Home" />
           <ProfileRow icon="notifications-outline" label="Notifications" value="On" />
           <ProfileRow icon="language-outline" label="Language" value="English" />
