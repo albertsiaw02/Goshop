@@ -1,104 +1,28 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { useMemo, useState, type ComponentProps, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
-  Switch,
   TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ScreenHeader } from '@/components/screen-header';
+import { SettingsRow, ToggleRow } from '@/components/settings-rows';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useTheme } from '@/hooks/use-theme';
 
 const TABS = [
-  { key: 'profile', label: 'Profile', icon: 'person-outline' },
-  { key: 'notifications', label: 'Alerts', icon: 'notifications-outline' },
+  { key: 'personal', label: 'Personal info', icon: 'person-outline' },
   { key: 'security', label: 'Security', icon: 'shield-checkmark-outline' },
 ] as const;
 
 type TabKey = (typeof TABS)[number]['key'];
-
-type RowProps = {
-  icon: ComponentProps<typeof Ionicons>['name'];
-  label: string;
-  value?: string;
-  tone?: 'default' | 'danger';
-  onPress?: () => void;
-};
-
-function SettingsRow({ icon, label, value, tone = 'default', onPress }: RowProps) {
-  const theme = useTheme();
-  const danger = tone === 'danger';
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      className="min-h-[56px] flex-row items-center gap-3"
-      onPress={onPress}
-      style={({ pressed }) => (pressed ? { opacity: 0.65 } : undefined)}>
-      <View
-        className={`h-9 w-9 items-center justify-center rounded-xl ${
-          danger ? 'bg-[#fee2e2]' : 'bg-brand-50'
-        }`}>
-        <Ionicons name={icon} size={18} color={danger ? '#dc2626' : '#16a34a'} />
-      </View>
-      <ThemedText className={`flex-1 ${danger ? 'font-semibold text-danger' : ''}`}>
-        {label}
-      </ThemedText>
-      {value ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          {value}
-        </ThemedText>
-      ) : null}
-      <Ionicons name="chevron-forward" size={16} color={theme.textSecondary} />
-    </Pressable>
-  );
-}
-
-function ToggleRow({
-  icon,
-  label,
-  description,
-  value,
-  onValueChange,
-}: {
-  icon: ComponentProps<typeof Ionicons>['name'];
-  label: string;
-  description: string;
-  value: boolean;
-  onValueChange: (value: boolean) => void;
-}) {
-  const theme = useTheme();
-
-  return (
-    <View className="min-h-[64px] flex-row items-center gap-3">
-      <View className="h-9 w-9 items-center justify-center rounded-xl bg-brand-50">
-        <Ionicons name={icon} size={18} color="#16a34a" />
-      </View>
-      <View className="flex-1 gap-0.5">
-        <ThemedText className="font-semibold">{label}</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          {description}
-        </ThemedText>
-      </View>
-      <Switch
-        accessibilityLabel={label}
-        onValueChange={onValueChange}
-        thumbColor="#ffffff"
-        trackColor={{ false: theme.backgroundSelected, true: '#16a34a' }}
-        value={value}
-      />
-    </View>
-  );
-}
 
 function Section({
   title,
@@ -160,10 +84,10 @@ function Field({
   );
 }
 
-export default function SettingsScreen() {
+export default function ProfileSettingsScreen() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const [activeTab, setActiveTab] = useState<TabKey>('profile');
+  const [activeTab, setActiveTab] = useState<TabKey>('personal');
 
   const [name, setName] = useState('Albert Kay');
   const [email, setEmail] = useState('albert@example.com');
@@ -172,10 +96,6 @@ export default function SettingsScreen() {
   const [draftEmail, setDraftEmail] = useState(email);
   const [draftPhone, setDraftPhone] = useState(phone);
 
-  const [orderUpdates, setOrderUpdates] = useState(true);
-  const [offers, setOffers] = useState(true);
-  const [newsletter, setNewsletter] = useState(false);
-  const [smsAlerts, setSmsAlerts] = useState(false);
   const [twoFactor, setTwoFactor] = useState(true);
   const [biometrics, setBiometrics] = useState(false);
 
@@ -208,23 +128,11 @@ export default function SettingsScreen() {
     <ThemedView className="flex-1">
       <SafeAreaView edges={['top']} className="flex-1">
         <View className="w-full max-w-[800px] flex-1 self-center px-5 pt-3">
-          <View className="mb-4 h-11 flex-row items-center">
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Go back"
-              className="h-10 w-10 items-center justify-center rounded-full border border-[#eef2f6]"
-              onPress={() => (router.canGoBack() ? router.back() : router.replace('/profile'))}
-              style={({ pressed }) => (pressed ? { opacity: 0.65 } : undefined)}>
-              <Ionicons name="chevron-back" size={20} color={theme.text} />
-            </Pressable>
-            <View className="flex-1 items-center">
-              <ThemedText className="text-[18px] font-bold">Settings</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                Manage your account
-              </ThemedText>
-            </View>
-            <View className="h-10 w-10" />
-          </View>
+          <ScreenHeader
+            fallback="/profile"
+            subtitle="Personal information and security"
+            title="Profile"
+          />
 
           <View className="mb-4 flex-row rounded-2xl bg-element p-1">
             {TABS.map((tab) => {
@@ -263,7 +171,7 @@ export default function SettingsScreen() {
               contentContainerStyle={{ gap: 16, paddingBottom: insets.bottom + 32 }}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}>
-              {activeTab === 'profile' ? (
+              {activeTab === 'personal' ? (
                 <>
                   <View className="items-center pb-1 pt-2">
                     <View className="mb-3 h-[88px] w-[88px] items-center justify-center rounded-full bg-brand-100">
@@ -333,11 +241,6 @@ export default function SettingsScreen() {
                       onPress={() => setActiveTab('security')}
                     />
                     <SettingsRow
-                      icon="notifications-outline"
-                      label="Notification preferences"
-                      onPress={() => setActiveTab('notifications')}
-                    />
-                    <SettingsRow
                       icon="trash-outline"
                       label="Delete account"
                       onPress={() =>
@@ -351,44 +254,6 @@ export default function SettingsScreen() {
                         )
                       }
                       tone="danger"
-                    />
-                  </Section>
-                </>
-              ) : null}
-
-              {activeTab === 'notifications' ? (
-                <>
-                  <Section title="Order updates" description="Keep up with your deliveries.">
-                    <ToggleRow
-                      description="Status changes and delivery reminders"
-                      icon="bag-check-outline"
-                      label="Order updates"
-                      onValueChange={setOrderUpdates}
-                      value={orderUpdates}
-                    />
-                    <ToggleRow
-                      description="Text messages for time-sensitive updates"
-                      icon="chatbubble-ellipses-outline"
-                      label="SMS alerts"
-                      onValueChange={setSmsAlerts}
-                      value={smsAlerts}
-                    />
-                  </Section>
-
-                  <Section title="Deals and news" description="Choose what lands in your inbox.">
-                    <ToggleRow
-                      description="Weekly offers and fresh deals"
-                      icon="pricetag-outline"
-                      label="Offers"
-                      onValueChange={setOffers}
-                      value={offers}
-                    />
-                    <ToggleRow
-                      description="Product news and seasonal recipes"
-                      icon="mail-outline"
-                      label="Newsletter"
-                      onValueChange={setNewsletter}
-                      value={newsletter}
                     />
                   </Section>
                 </>
@@ -426,7 +291,9 @@ export default function SettingsScreen() {
                       icon="phone-portrait-outline"
                       label="This device"
                       value="Active now"
-                      onPress={() => Alert.alert('This device', 'You are signed in on this device.')}
+                      onPress={() =>
+                        Alert.alert('This device', 'You are signed in on this device.')
+                      }
                     />
                     <SettingsRow
                       icon="laptop-outline"
