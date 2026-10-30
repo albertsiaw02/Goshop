@@ -6,6 +6,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useTheme } from '@/hooks/use-theme';
+import { useLanguage } from '@/store/language';
 import { getPaymentMethodLabel, usePaymentMethods } from '@/store/payment-methods';
 
 const PROFILE = {
@@ -73,6 +74,7 @@ function ProfileSection({ title, children }: { title: string; children: ReactNod
 
 export default function ProfileScreen() {
   const { defaultMethod } = usePaymentMethods();
+  const { language } = useLanguage();
 
   return (
     <ThemedView className="flex-1">
@@ -119,7 +121,12 @@ export default function ProfileScreen() {
             value="Manage"
             onPress={() => router.push('/notifications')}
           />
-          <ProfileRow icon="language-outline" label="Language" value="English" />
+          <ProfileRow
+            icon="language-outline"
+            label="Language"
+            value={language.label}
+            onPress={() => router.push('/language')}
+          />
         </ProfileSection>
 
         <Pressable
