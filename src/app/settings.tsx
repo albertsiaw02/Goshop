@@ -111,7 +111,6 @@ export default function ProfileSettingsScreen() {
 
   const isDirty =
     draftName.trim() !== name || draftEmail.trim() !== email || draftPhone.trim() !== phone;
-
   const saveProfile = () => {
     if (!draftName.trim() || !/\S+@\S+\.\S+/.test(draftEmail.trim())) {
       Alert.alert('Check your details', 'Enter your name and a valid email address.');
@@ -305,6 +304,7 @@ export default function ProfileSettingsScreen() {
                   </Section>
                 </>
               ) : null}
+
             </ScrollView>
           </KeyboardAvoidingView>
         </View>
