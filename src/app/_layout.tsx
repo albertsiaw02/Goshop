@@ -39,6 +39,7 @@ export default function RootLayout() {
                 options={{ headerShown: false }}
               />
               <Stack.Screen name="settings" options={{ headerShown: false }} />
+              <Stack.Screen name="delivery" options={{ headerShown: false }} />
               <Stack.Screen name="notifications" options={{ headerShown: false }} />
               <Stack.Screen name="language" options={{ headerShown: false }} />
               <Stack.Screen name="payment-methods/index" options={{ headerShown: false }} />

@@ -114,7 +114,12 @@ export default function ProfileScreen() {
             label="Profile"
             onPress={() => router.push('/settings')}
           />
-          <ProfileRow icon="location-outline" label="Delivery address" value="Home" />
+          <ProfileRow
+            icon="location-outline"
+            label="Delivery address"
+            value="Home"
+            onPress={() => router.push('/delivery')}
+          />
           <ProfileRow
             icon="notifications-outline"
             label="Notifications"
