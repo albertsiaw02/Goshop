@@ -5,7 +5,7 @@ export type CartLine = { id: string; qty: number };
 type CartContextValue = {
   items: CartLine[];
   count: number;
-  addItem: (id: string) => void;
+  addItem: (id: string, quantity?: number) => void;
   setQty: (id: string, qty: number) => void;
   removeItem: (id: string) => void;
 };
@@ -21,13 +21,15 @@ const INITIAL: CartLine[] = [
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartLine[]>(INITIAL);
 
-  const addItem = useCallback((id: string) => {
+  const addItem = useCallback((id: string, quantity = 1) => {
     setItems((prev) => {
       const existing = prev.find((item) => item.id === id);
       if (existing) {
-        return prev.map((item) => (item.id === id ? { ...item, qty: item.qty + 1 } : item));
+        return prev.map((item) =>
+          item.id === id ? { ...item, qty: item.qty + quantity } : item,
+        );
       }
-      return [...prev, { id, qty: 1 }];
+      return [...prev, { id, qty: quantity }];
     });
   }, []);
 
