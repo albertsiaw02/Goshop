@@ -1,4 +1,6 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -6,6 +8,37 @@ import { FormField } from '@/components/form-field';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+
+function DeliverySection({
+  icon,
+  title,
+  subtitle,
+  children,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  subtitle: string;
+  children: ReactNode;
+}) {
+  return (
+    <ThemedView
+      type="backgroundElement"
+      className="rounded-2xl border border-[#eef2f6] px-4 pb-1 pt-4">
+      <View className="mb-1 flex-row items-center gap-3">
+        <View className="h-10 w-10 items-center justify-center rounded-xl bg-brand-100">
+          <Ionicons name={icon} size={19} color="#15803d" />
+        </View>
+        <View className="flex-1 gap-0.5">
+          <ThemedText className="text-[15px] font-bold">{title}</ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">
+            {subtitle}
+          </ThemedText>
+        </View>
+      </View>
+      <View className="mt-3">{children}</View>
+    </ThemedView>
+  );
+}
 
 type DeliveryDetails = {
   recipient: string;
@@ -74,7 +107,7 @@ export default function DeliveryScreen() {
         <View className="w-full max-w-[800px] flex-1 self-center px-5 pt-3">
           <ScreenHeader
             fallback="/profile"
-            subtitle="Set where your groceries should go"
+            subtitle="Your drop-off details"
             title="Delivery address"
           />
 
@@ -83,20 +116,26 @@ export default function DeliveryScreen() {
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
             <ScrollView
               className="flex-1"
-              contentContainerStyle={{ gap: 16, paddingBottom: insets.bottom + 32 }}
+              contentContainerStyle={{ gap: 12, paddingBottom: 12 }}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}>
               <ThemedView
-                type="backgroundElement"
-                className="rounded-3xl border border-[#eef2f6] px-5 py-2">
-                <View className="mb-1 mt-3 gap-0.5">
-                  <ThemedText className="text-[15px] font-bold">Delivery details</ThemedText>
+                className="flex-row items-center gap-3 rounded-2xl border border-brand-100 bg-brand-50 px-4 py-4">
+                <View className="h-11 w-11 items-center justify-center rounded-xl bg-background">
+                  <Ionicons name="location" size={21} color="#15803d" />
+                </View>
+                <View className="flex-1 gap-0.5">
+                  <ThemedText className="text-base font-bold">Where should we bring it?</ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">
-                    Add your address and a phone number for the courier.
+                    Add an address and a way for your courier to reach you.
                   </ThemedText>
                 </View>
+              </ThemedView>
 
-                <View className="mt-3">
+              <DeliverySection
+                icon="person-outline"
+                subtitle="Who should the courier ask for?"
+                title="Contact details">
                   <FormField
                     autoCapitalize="words"
                     label="Recipient name"
@@ -111,6 +150,12 @@ export default function DeliveryScreen() {
                     placeholder="+971 50 000 0000"
                     value={draftDetails.phone}
                   />
+              </DeliverySection>
+
+              <DeliverySection
+                icon="navigate-outline"
+                subtitle="A precise address helps avoid delays."
+                title="Drop-off location">
                   <FormField
                     autoCapitalize="words"
                     label="Street address"
@@ -132,31 +177,45 @@ export default function DeliveryScreen() {
                     placeholder="City"
                     value={draftDetails.city}
                   />
+              </DeliverySection>
+
+              <DeliverySection
+                icon="chatbox-ellipses-outline"
+                subtitle="Optional details for the courier."
+                title="Drop-off notes">
                   <FormField
-                    label="Delivery instructions (optional)"
+                    label="Instructions (optional)"
                     onChangeText={(value) => updateField('instructions', value)}
-                    placeholder="Gate code, landmarks, or other notes"
+                    placeholder="Gate code, landmark, or safe place"
                     value={draftDetails.instructions}
                   />
-                </View>
-
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityState={{ disabled: !isDirty }}
-                  className={`mb-3 mt-1 items-center rounded-xl py-3 ${
-                    isDirty ? 'bg-brand-500' : 'bg-selected'
-                  }`}
-                  disabled={!isDirty}
-                  onPress={saveDeliveryDetails}
-                  style={({ pressed }) => (pressed ? { opacity: 0.85 } : undefined)}>
-                  <ThemedText
-                    className={`font-semibold ${isDirty ? 'text-white' : ''}`}
-                    themeColor={isDirty ? undefined : 'textSecondary'}>
-                    Save delivery details
-                  </ThemedText>
-                </Pressable>
-              </ThemedView>
+              </DeliverySection>
             </ScrollView>
+
+            <View
+              className="border-t border-[#eef2f6] bg-background px-1 pt-3"
+              style={{ paddingBottom: Math.max(insets.bottom, 12) }}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ disabled: !isDirty }}
+                className={`h-12 flex-row items-center justify-center gap-2 rounded-xl ${
+                  isDirty ? 'bg-brand-500' : 'bg-selected'
+                }`}
+                disabled={!isDirty}
+                onPress={saveDeliveryDetails}
+                style={({ pressed }) => (pressed ? { opacity: 0.85 } : undefined)}>
+                <Ionicons
+                  name={isDirty ? 'checkmark-circle-outline' : 'checkmark-circle'}
+                  size={19}
+                  color={isDirty ? '#ffffff' : '#64748b'}
+                />
+                <ThemedText
+                  className={`font-semibold ${isDirty ? 'text-white' : ''}`}
+                  themeColor={isDirty ? undefined : 'textSecondary'}>
+                  {isDirty ? 'Save delivery details' : 'No changes to save'}
+                </ThemedText>
+              </Pressable>
+            </View>
           </KeyboardAvoidingView>
         </View>
       </SafeAreaView>
