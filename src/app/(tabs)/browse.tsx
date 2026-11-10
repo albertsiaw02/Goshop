@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useColorScheme } from 'nativewind';
 
 import { ProductCard } from '@/components/product-card';
 import { PromotionCarousel } from '@/components/promotion-carousel';
@@ -13,6 +14,8 @@ import { useCart } from '@/store/cart';
 
 export default function BrowseScreen() {
   const theme = useTheme();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const { count } = useCart();
   const { width: screenWidth } = useWindowDimensions();
   const contentWidth = Math.min(screenWidth, 680) - 40;
@@ -48,7 +51,7 @@ export default function BrowseScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={`Open cart, ${count} items`}
                 onPress={() => router.push('/(tabs)/cart')}
-                style={[styles.cartButton, { backgroundColor: theme.backgroundElement }]}>
+                style={[styles.cartButton, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
                 <Ionicons name="bag-outline" size={21} color={theme.text} />
                 {count > 0 && (
                   <View style={styles.cartBadge}>
@@ -60,13 +63,13 @@ export default function BrowseScreen() {
 
             <View
               accessibilityRole="search"
-              style={[styles.searchBar, { backgroundColor: theme.backgroundElement }]}>
+              style={[styles.searchBar, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
               <Ionicons name="search-outline" size={20} color={theme.textSecondary} />
               <TextInput
                 value={query}
                 onChangeText={setQuery}
                 placeholder="Search fresh groceries"
-                placeholderTextColor={theme.textSecondary}
+                placeholderTextColor={theme.placeholder}
                 style={[styles.searchInput, { color: theme.text }]}
                 returnKeyType="search"
               />
@@ -96,15 +99,21 @@ export default function BrowseScreen() {
                       style={[
                         styles.chip,
                         {
-                          backgroundColor: selected ? '#dcfce7' : theme.backgroundElement,
-                          borderColor: selected ? '#bbf7d0' : 'transparent',
+                          backgroundColor: selected ? theme.brandSoft : theme.backgroundElement,
+                          borderColor: selected
+                            ? isDark
+                              ? 'rgba(74, 222, 128, 0.35)'
+                              : '#bbf7d0'
+                            : 'transparent',
                         },
                       ]}>
                       <Text style={styles.chipEmoji}>{item.emoji}</Text>
                       <Text
                         style={[
                           styles.chipText,
-                          selected ? styles.chipTextSelected : { color: theme.textSecondary },
+                          selected
+                            ? [styles.chipTextSelected, { color: theme.brandInk }]
+                            : { color: theme.textSecondary },
                         ]}>
                         {item.name}
                       </Text>
@@ -185,7 +194,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#e2e8f0',
   },
   cartDot: {
     position: 'absolute',
@@ -226,7 +234,6 @@ const styles = StyleSheet.create({
     gap: 11,
     marginBottom: 20,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#e2e8f0',
   },
   searchInput: {
     flex: 1,
@@ -274,7 +281,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   chipTextSelected: {
-    color: '#15803d',
     fontWeight: '700',
   },
   productGrid: {

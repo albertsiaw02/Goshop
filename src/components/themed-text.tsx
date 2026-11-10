@@ -25,6 +25,11 @@ const TEXT_COLOR_BY_THEME: Record<ThemeColor, string> = {
   background: 'text-background',
   backgroundElement: 'text-element',
   backgroundSelected: 'text-selected',
+  border: 'text-border',
+  brandSoft: 'text-brand-soft',
+  brandInk: 'text-brand-ink',
+  dangerSoft: 'text-danger-soft',
+  placeholder: 'text-placeholder',
 };
 
 export function ThemedText({

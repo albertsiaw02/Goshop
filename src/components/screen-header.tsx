@@ -26,7 +26,7 @@ export function ScreenHeader({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Go back"
-        className="h-10 w-10 items-center justify-center rounded-full border border-[#eef2f6]"
+        className="h-10 w-10 items-center justify-center rounded-full border border-border"
         onPress={() => (router.canGoBack() ? router.back() : router.replace(fallback))}
         style={({ pressed }) => (pressed ? { opacity: 0.65 } : undefined)}>
         <Ionicons name="chevron-back" size={20} color={theme.text} />

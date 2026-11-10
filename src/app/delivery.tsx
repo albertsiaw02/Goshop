@@ -325,7 +325,7 @@ export default function DeliveryScreen() {
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}>
               <View
-                className="h-[370px] overflow-hidden rounded-[28px] border border-[#e4e9e3] bg-[#eef2eb]"
+                className="h-[370px] overflow-hidden rounded-[28px] border border-border bg-[#eef2eb] dark:bg-[#1e2618]"
                 onLayout={(event) =>
                   setMapSize({
                     width: event.nativeEvent.layout.width,
@@ -368,9 +368,9 @@ export default function DeliveryScreen() {
                 ) : (
                   <View
                     pointerEvents="none"
-                    className="absolute inset-0 items-center justify-center bg-[#eaf1e8] px-12">
-                    <View className="mb-3 h-14 w-14 items-center justify-center rounded-full bg-white">
-                      <Ionicons color="#16a34a" name="map-outline" size={27} />
+                    className="absolute inset-0 items-center justify-center bg-[#eaf1e8] px-12 dark:bg-[#1e2618]">
+                    <View className="mb-3 h-14 w-14 items-center justify-center rounded-full bg-background">
+                      <Ionicons color={theme.brandInk} name="map-outline" size={27} />
                     </View>
                     <ThemedText className="text-center text-[15px] font-bold">
                       Find your delivery spot
@@ -384,7 +384,7 @@ export default function DeliveryScreen() {
                 )}
 
                 <View className="absolute left-3 right-3 top-3 flex-row items-center gap-2">
-                  <View className="h-[50px] flex-1 flex-row items-center rounded-2xl border border-[#eef2f6] bg-white px-3 shadow-sm">
+                    <View className="h-[50px] flex-1 flex-row items-center rounded-2xl border border-border bg-background px-3 shadow-sm">
                     <Ionicons color={theme.textSecondary} name="search-outline" size={19} />
                     <TextInput
                       accessibilityLabel="Search for a street, building, or place"
@@ -399,7 +399,7 @@ export default function DeliveryScreen() {
                       }}
                       onSubmitEditing={() => void searchLocations()}
                       placeholder="Search street or building"
-                      placeholderTextColor={theme.textSecondary}
+                      placeholderTextColor={theme.placeholder}
                       returnKeyType="search"
                       value={searchText}
                     />
@@ -421,22 +421,22 @@ export default function DeliveryScreen() {
                     accessibilityLabel="Use my current location"
                     accessibilityRole="button"
                     accessibilityState={{ disabled: isResolvingLocation }}
-                    className="h-[50px] w-[50px] items-center justify-center rounded-2xl border border-[#eef2f6] bg-white shadow-sm"
+                    className="h-[50px] w-[50px] items-center justify-center rounded-2xl border border-border bg-background shadow-sm"
                     disabled={isResolvingLocation}
                     onPress={() => void useCurrentLocation()}>
-                    <Ionicons color="#16a34a" name="locate" size={22} />
+                    <Ionicons color={theme.brandInk} name="locate" size={22} />
                   </Pressable>
                 </View>
 
                 {searchResults.length > 0 ? (
-                  <View className="absolute left-3 right-[68px] top-[61px] overflow-hidden rounded-2xl border border-[#eef2f6] bg-white shadow-md">
+                  <View className="absolute left-3 right-[68px] top-[61px] overflow-hidden rounded-2xl border border-border bg-background shadow-md">
                     {searchResults.map((result) => (
                       <Pressable
                         accessibilityRole="button"
                         key={result.place_id}
-                        className="flex-row items-center gap-2 border-b border-[#f1f5f9] px-3 py-2.5"
+                        className="flex-row items-center gap-2 border-b border-border px-3 py-2.5"
                         onPress={() => selectSearchResult(result)}>
-                        <Ionicons color="#16a34a" name="location-outline" size={16} />
+                        <Ionicons color={theme.brandInk} name="location-outline" size={16} />
                         <ThemedText className="flex-1 text-[12px]" numberOfLines={2}>
                           {result.display_name}
                         </ThemedText>
@@ -453,7 +453,7 @@ export default function DeliveryScreen() {
                       top: mapSize.height / 2 - 38,
                     }}>
                     <Ionicons
-                      color="#16a34a"
+                      color={theme.brandInk}
                       name="location"
                       size={42}
                       style={{
@@ -468,10 +468,10 @@ export default function DeliveryScreen() {
 
                 <View
                   pointerEvents="none"
-                  className="absolute bottom-9 left-3 right-3 flex-row items-center gap-3 rounded-2xl border border-white/80 bg-white/95 px-3.5 py-3">
-                  <View className="h-9 w-9 items-center justify-center rounded-full bg-brand-50">
+                  className="absolute bottom-9 left-3 right-3 flex-row items-center gap-3 rounded-2xl border border-border bg-background/95 px-3.5 py-3">
+                  <View className="h-9 w-9 items-center justify-center rounded-full bg-brand-soft">
                     <Ionicons
-                      color="#16a34a"
+                      color={theme.brandInk}
                       name={selectedLocation ? 'location' : 'navigate-outline'}
                       size={18}
                     />
@@ -489,7 +489,7 @@ export default function DeliveryScreen() {
                     </ThemedText>
                   </View>
                   {selectedLocation ? (
-                    <Ionicons color="#16a34a" name="checkmark-circle" size={21} />
+                    <Ionicons color={theme.brandInk} name="checkmark-circle" size={21} />
                   ) : null}
                 </View>
 
@@ -516,7 +516,7 @@ export default function DeliveryScreen() {
               {locationMessage ? (
                 <ThemedView
                   type="backgroundElement"
-                  className="flex-row items-start gap-2 rounded-2xl border border-[#fcd34d] px-4 py-3">
+                  className="flex-row items-start gap-2 rounded-2xl border border-[#fcd34d] px-4 py-3 dark:border-[#7c6218]">
                   <Ionicons color="#b45309" name="information-circle-outline" size={18} />
                   <ThemedText className="flex-1 text-[12px]" themeColor="textSecondary">
                     {locationMessage}
@@ -526,7 +526,7 @@ export default function DeliveryScreen() {
 
               <ThemedView
                 type="backgroundElement"
-                className="rounded-3xl border border-[#eef2f6] px-5 py-4">
+                className="rounded-3xl border border-border px-5 py-4">
                 <View className="mb-1 gap-0.5">
                   <ThemedText className="text-[15px] font-bold">Who&apos;s receiving it?</ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">

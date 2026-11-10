@@ -3,14 +3,19 @@ import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { AnimatedSplashOverlay } from "@/components/animated-icon";
+import { useTheme } from "@/hooks/use-theme";
 import { CartProvider } from "@/store/cart";
 import { LanguageProvider } from "@/store/language";
 import { PaymentMethodsProvider } from "@/store/payment-methods";
+import { ThemeProvider, useThemePreference } from "@/store/theme";
 
-export default function RootLayout() {
+function AppShell() {
+  const theme = useTheme();
+  const { scheme } = useThemePreference();
+
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: "#ffffff" }}>
-      <StatusBar style="dark" />
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: theme.background }}>
+      <StatusBar style={scheme === "dark" ? "light" : "dark"} />
       <CartProvider>
         <PaymentMethodsProvider>
           <LanguageProvider>
@@ -18,9 +23,9 @@ export default function RootLayout() {
             <Stack
               screenOptions={{
                 headerShown: false,
-                contentStyle: { backgroundColor: "#ffffff" },
-                headerStyle: { backgroundColor: "#ffffff" },
-                headerTintColor: "#0f172a",
+                contentStyle: { backgroundColor: theme.background },
+                headerStyle: { backgroundColor: theme.background },
+                headerTintColor: theme.text,
                 headerShadowVisible: false,
               }}
             >
@@ -54,5 +59,13 @@ export default function RootLayout() {
         </PaymentMethodsProvider>
       </CartProvider>
     </GestureHandlerRootView>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ThemeProvider>
+      <AppShell />
+    </ThemeProvider>
   );
 }

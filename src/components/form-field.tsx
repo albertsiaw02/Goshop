@@ -29,8 +29,8 @@ export function FormField({ label, hint, ...inputProps }: FormFieldProps) {
       </ThemedText>
       <TextInput
         accessibilityLabel={label}
-        className="rounded-xl border border-[#e2e8f0] bg-background px-4 py-3 text-base text-content"
-        placeholderTextColor={theme.textSecondary}
+        className="rounded-xl border border-border bg-background px-4 py-3 text-base text-content"
+        placeholderTextColor={theme.placeholder}
         {...inputProps}
       />
       {hint ? (

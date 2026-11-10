@@ -7,9 +7,11 @@ import { PaymentMethodVisual } from '@/components/payment-card';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useTheme } from '@/hooks/use-theme';
 import { getPaymentMethodLabel, usePaymentMethods } from '@/store/payment-methods';
 
 export default function PaymentMethodsScreen() {
+  const theme = useTheme();
   const insets = useSafeAreaInsets();
   const { methods } = usePaymentMethods();
 
@@ -28,9 +30,9 @@ export default function PaymentMethodsScreen() {
             contentContainerStyle={{ gap: 14, paddingBottom: insets.bottom + 32 }}
             showsVerticalScrollIndicator={false}>
             {methods.length === 0 ? (
-              <View className="items-center gap-3 rounded-3xl border border-[#eef2f6] bg-element px-6 py-12">
-                <View className="h-16 w-16 items-center justify-center rounded-full bg-brand-50">
-                  <Ionicons name="card-outline" size={30} color="#16a34a" />
+              <View className="items-center gap-3 rounded-3xl border border-border bg-element px-6 py-12">
+                <View className="h-16 w-16 items-center justify-center rounded-full bg-brand-soft">
+                  <Ionicons name="card-outline" size={30} color={theme.brandInk} />
                 </View>
                 <ThemedText className="text-[17px] font-bold">No payment methods yet</ThemedText>
                 <ThemedText themeColor="textSecondary" className="text-center">
@@ -65,26 +67,26 @@ export default function PaymentMethodsScreen() {
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Add card"
-                className="min-h-[56px] flex-1 flex-row items-center justify-center gap-2 rounded-2xl border border-dashed border-brand-500 bg-brand-50/60 px-3"
+                className="min-h-[56px] flex-1 flex-row items-center justify-center gap-2 rounded-2xl border border-dashed border-brand-500 bg-brand-soft/60 px-3"
                 onPress={() => router.push('/payment-methods/add')}
                 style={({ pressed }) => (pressed ? { opacity: 0.75 } : undefined)}>
-                <Ionicons name="card-outline" size={19} color="#16a34a" />
-                <ThemedText className="font-semibold text-brand-600">Add card</ThemedText>
+                <Ionicons name="card-outline" size={19} color={theme.brandInk} />
+                <ThemedText className="font-semibold text-brand-ink">Add card</ThemedText>
               </Pressable>
 
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Add mobile money"
-                className="min-h-[56px] flex-1 flex-row items-center justify-center gap-2 rounded-2xl border border-dashed border-brand-500 bg-brand-50/60 px-3"
+                className="min-h-[56px] flex-1 flex-row items-center justify-center gap-2 rounded-2xl border border-dashed border-brand-500 bg-brand-soft/60 px-3"
                 onPress={() => router.push('/payment-methods/add-mobile-money')}
                 style={({ pressed }) => (pressed ? { opacity: 0.75 } : undefined)}>
-                <Ionicons name="phone-portrait-outline" size={19} color="#16a34a" />
-                <ThemedText className="font-semibold text-brand-600">Mobile money</ThemedText>
+                <Ionicons name="phone-portrait-outline" size={19} color={theme.brandInk} />
+                <ThemedText className="font-semibold text-brand-ink">Mobile money</ThemedText>
               </Pressable>
             </View>
 
             <View className="mt-2 flex-row items-center justify-center gap-2">
-              <Ionicons name="lock-closed-outline" size={13} color="#94a3b8" />
+              <Ionicons name="lock-closed-outline" size={13} color={theme.textSecondary} />
               <ThemedText type="small" themeColor="textSecondary">
                 Payment details are encrypted and stored securely.
               </ThemedText>

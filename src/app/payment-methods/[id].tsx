@@ -175,7 +175,7 @@ export default function EditPaymentMethodScreen() {
                 />
               )}
 
-              <View className="rounded-3xl border border-[#eef2f6] bg-element px-5 py-2">
+              <View className="rounded-3xl border border-border bg-element px-5 py-2">
                 <View className="mb-2 mt-3 gap-0.5">
                   <ThemedText className="text-[15px] font-bold">
                     {isCard ? 'Card details' : 'Mobile money details'}
@@ -231,7 +231,7 @@ export default function EditPaymentMethodScreen() {
                                 className={`rounded-xl border px-3 py-2.5 ${
                                   selected
                                     ? 'border-brand-500 bg-brand-500'
-                                    : 'border-[#e2e8f0] bg-background'
+                                    : 'border-border bg-background'
                                 }`}>
                                 <ThemedText
                                   type="small"
@@ -257,9 +257,9 @@ export default function EditPaymentMethodScreen() {
                 </View>
               </View>
 
-              <View className="min-h-[64px] flex-row items-center gap-3 rounded-3xl border border-[#eef2f6] bg-element px-5">
+              <View className="min-h-[64px] flex-row items-center gap-3 rounded-3xl border border-border bg-element px-5">
                 <View className="h-9 w-9 items-center justify-center rounded-xl bg-brand-50">
-                  <Ionicons name="star-outline" size={18} color="#16a34a" />
+                  <Ionicons name="star-outline" size={18} color={theme.brandInk} />
                 </View>
                 <View className="flex-1 gap-0.5">
                   <ThemedText className="font-semibold">
@@ -293,7 +293,7 @@ export default function EditPaymentMethodScreen() {
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Remove payment method"
-                className="min-h-[56px] flex-row items-center justify-center gap-2 rounded-2xl border border-[#fecaca] bg-[#fef2f2]"
+                className="min-h-[56px] flex-row items-center justify-center gap-2 rounded-2xl border border-danger/30 bg-danger-soft"
                 onPress={confirmRemove}
                 style={({ pressed }) => (pressed ? { opacity: 0.75 } : undefined)}>
                 <Ionicons name="trash-outline" size={18} color="#dc2626" />

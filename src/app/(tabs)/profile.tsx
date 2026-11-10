@@ -32,8 +32,8 @@ function ProfileRow({ icon, label, value, onPress }: ProfileRowProps) {
   const theme = useTheme();
   const content = (
     <>
-      <View className="h-10 w-10 items-center justify-center rounded-xl bg-white">
-        <Ionicons name={icon} size={20} color="#16a34a" />
+      <View className="h-10 w-10 items-center justify-center rounded-xl bg-background">
+        <Ionicons name={icon} size={20} color={theme.brandInk} />
       </View>
       <ThemedText className="flex-1">{label}</ThemedText>
       {value ? (
@@ -63,7 +63,7 @@ function ProfileRow({ icon, label, value, onPress }: ProfileRowProps) {
 
 function ProfileSection({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <ThemedView type="backgroundElement" className="rounded-3xl border border-[#eef2f6] px-5 py-3">
+    <ThemedView type="backgroundElement" className="rounded-3xl border border-border px-5 py-3">
       <ThemedText type="smallBold" className="mb-1 mt-2 text-[16px]">
         {title}
       </ThemedText>
@@ -83,8 +83,8 @@ export default function ProfileScreen() {
         contentContainerClassName="w-full max-w-[800px] self-center gap-5 px-5 pb-8 pt-7"
         showsVerticalScrollIndicator={false}>
         <View className="items-center pb-3 pt-2">
-          <View className="mb-3 h-[92px] w-[92px] items-center justify-center overflow-hidden rounded-full border-4 border-white bg-[#dcfce7]">
-            <ThemedText className="text-[32px] font-extrabold leading-10 text-brand-600">
+          <View className="mb-3 h-[92px] w-[92px] items-center justify-center overflow-hidden rounded-full border-4 border-background bg-brand-soft">
+            <ThemedText className="text-[32px] font-extrabold leading-10 text-brand-ink">
               {INITIALS}
             </ThemedText>
           </View>
