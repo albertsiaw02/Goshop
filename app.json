@@ -30,7 +30,13 @@
       "expo-font",
       "expo-web-browser",
       "expo-image",
-      "expo-status-bar"
+      "expo-status-bar",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow GoShop to use your location to set a delivery address."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
