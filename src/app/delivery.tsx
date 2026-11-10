@@ -25,6 +25,37 @@ const MAP_ZOOM = 15;
 const TILE_SIZE = 256;
 const GEOCODER_MIN_INTERVAL = 1000;
 
+function DeliverySection({
+  icon,
+  title,
+  subtitle,
+  children,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  subtitle: string;
+  children: ReactNode;
+}) {
+  return (
+    <ThemedView
+      type="backgroundElement"
+      className="rounded-2xl border border-[#eef2f6] px-4 pb-1 pt-4">
+      <View className="mb-1 flex-row items-center gap-3">
+        <View className="h-10 w-10 items-center justify-center rounded-xl bg-brand-100">
+          <Ionicons name={icon} size={19} color="#15803d" />
+        </View>
+        <View className="flex-1 gap-0.5">
+          <ThemedText className="text-[15px] font-bold">{title}</ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">
+            {subtitle}
+          </ThemedText>
+        </View>
+      </View>
+      <View className="mt-3">{children}</View>
+    </ThemedView>
+  );
+}
+
 type DeliveryDetails = {
   recipient: string;
   phone: string;
@@ -321,7 +352,7 @@ export default function DeliveryScreen() {
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
             <ScrollView
               className="flex-1"
-              contentContainerStyle={{ gap: 16, paddingBottom: insets.bottom + 32 }}
+              contentContainerStyle={{ gap: 12, paddingBottom: 12 }}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}>
               <View
@@ -533,8 +564,12 @@ export default function DeliveryScreen() {
                     Your courier will use these details at drop-off.
                   </ThemedText>
                 </View>
+              </ThemedView>
 
-                <View className="mt-3">
+              <DeliverySection
+                icon="person-outline"
+                subtitle="Who should the courier ask for?"
+                title="Contact details">
                   <FormField
                     autoCapitalize="words"
                     label="Recipient name"
@@ -549,6 +584,12 @@ export default function DeliveryScreen() {
                     placeholder="+971 50 000 0000"
                     value={draftDetails.phone}
                   />
+              </DeliverySection>
+
+              <DeliverySection
+                icon="navigate-outline"
+                subtitle="A precise address helps avoid delays."
+                title="Drop-off location">
                   <FormField
                     autoCapitalize="words"
                     label="Apartment, suite, etc. (optional)"
@@ -563,10 +604,16 @@ export default function DeliveryScreen() {
                     placeholder="City"
                     value={draftDetails.city}
                   />
+              </DeliverySection>
+
+              <DeliverySection
+                icon="chatbox-ellipses-outline"
+                subtitle="Optional details for the courier."
+                title="Drop-off notes">
                   <FormField
-                    label="Delivery instructions (optional)"
+                    label="Instructions (optional)"
                     onChangeText={(value) => updateField('instructions', value)}
-                    placeholder="Gate code, landmarks, or other notes"
+                    placeholder="Gate code, landmark, or safe place"
                     value={draftDetails.instructions}
                   />
                 </View>
@@ -588,6 +635,31 @@ export default function DeliveryScreen() {
                 </Pressable>
               </ThemedView>
             </ScrollView>
+
+            <View
+              className="border-t border-[#eef2f6] bg-background px-1 pt-3"
+              style={{ paddingBottom: Math.max(insets.bottom, 12) }}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ disabled: !isDirty }}
+                className={`h-12 flex-row items-center justify-center gap-2 rounded-xl ${
+                  isDirty ? 'bg-brand-500' : 'bg-selected'
+                }`}
+                disabled={!isDirty}
+                onPress={saveDeliveryDetails}
+                style={({ pressed }) => (pressed ? { opacity: 0.85 } : undefined)}>
+                <Ionicons
+                  name={isDirty ? 'checkmark-circle-outline' : 'checkmark-circle'}
+                  size={19}
+                  color={isDirty ? '#ffffff' : '#64748b'}
+                />
+                <ThemedText
+                  className={`font-semibold ${isDirty ? 'text-white' : ''}`}
+                  themeColor={isDirty ? undefined : 'textSecondary'}>
+                  {isDirty ? 'Save delivery details' : 'No changes to save'}
+                </ThemedText>
+              </Pressable>
+            </View>
           </KeyboardAvoidingView>
         </View>
       </SafeAreaView>
