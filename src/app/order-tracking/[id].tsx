@@ -5,8 +5,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { useTheme } from "@/hooks/use-theme";
 
 export default function OrderTrackingScreen() {
+  const theme = useTheme();
   const { id, placed, status, address } = useLocalSearchParams<{
     id: string;
     placed?: string;
@@ -45,7 +47,7 @@ export default function OrderTrackingScreen() {
                   : router.replace("/(tabs)/orders")
               }
             >
-              <Ionicons name="chevron-back" size={20} color="#0f172a" />
+              <Ionicons name="chevron-back" size={20} color={theme.text} />
             </Pressable>
           </View>
 
@@ -55,10 +57,10 @@ export default function OrderTrackingScreen() {
             showsVerticalScrollIndicator={false}
           >
             <View className="items-center pb-7 pt-8">
-              <View className="mb-5 h-28 w-28 items-center justify-center rounded-full bg-brand-50">
+              <View className="mb-5 h-28 w-28 items-center justify-center rounded-full bg-brand-soft">
                 <Text className="text-[58px]">{delivered ? "🛍️" : "🛵"}</Text>
                 {!delivered && (
-                  <View className="absolute -bottom-1 -right-1 h-10 w-10 items-center justify-center rounded-full border-4 border-white bg-white">
+                  <View className="absolute -bottom-1 -right-1 h-10 w-10 items-center justify-center rounded-full border-4 border-background bg-background">
                     <Text className="text-[23px]">🥬</Text>
                   </View>
                 )}
@@ -73,16 +75,16 @@ export default function OrderTrackingScreen() {
                 {statusDescription}
               </ThemedText>
               {!delivered && (
-                <View className="mt-4 flex-row items-center gap-2 rounded-full bg-brand-50 px-4 py-2">
-                  <Ionicons name="time-outline" size={16} color="#15803d" />
-                  <Text className="text-[13px] font-semibold text-brand-700">
+                <View className="mt-4 flex-row items-center gap-2 rounded-full bg-brand-soft px-4 py-2">
+                  <Ionicons name="time-outline" size={16} color={theme.brandInk} />
+                  <Text className="text-[13px] font-semibold text-brand-ink">
                     Estimated delivery in 30–45 min
                   </Text>
                 </View>
               )}
             </View>
 
-            <View className="border-y border-[#eef2f6] py-5">
+            <View className="border-y border-border py-5">
               <View className="flex-row items-center gap-4">
                 <View className="h-[68px] w-[68px] items-center justify-center rounded-2xl bg-element">
                   <Text className="text-[35px]">🧺</Text>
@@ -124,7 +126,7 @@ export default function OrderTrackingScreen() {
                         <Ionicons
                           name={complete ? "checkmark" : "ellipse-outline"}
                           size={15}
-                          color={complete ? "#ffffff" : "#94a3b8"}
+                          color={complete ? "#ffffff" : theme.textSecondary}
                         />
                       </View>
                       {!isLast && (
@@ -148,7 +150,7 @@ export default function OrderTrackingScreen() {
               })}
             </View>
 
-            <View className="border-t border-[#eef2f6] pt-5">
+            <View className="border-t border-border pt-5">
               <ThemedText className="mb-4 text-[18px] font-bold">
                 Order details
               </ThemedText>

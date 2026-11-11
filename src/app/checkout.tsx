@@ -28,11 +28,11 @@ export default function CheckoutScreen() {
     <ThemedView className="flex-1">
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="mx-auto w-full max-w-[800px] gap-5 p-6">
-          <View className="gap-3 rounded-3xl border border-[#eef2f6] bg-white p-5">
+          <View className="gap-3 rounded-3xl border border-border bg-background p-5">
             <ThemedText type="smallBold" className="text-[14px]">
               Delivery Address
             </ThemedText>
-            <View className="flex-row items-center gap-3 rounded-2xl border border-[#eef2f6] bg-element px-4">
+            <View className="flex-row items-center gap-3 rounded-2xl border border-border bg-element px-4">
               <Ionicons
                 name="location-outline"
                 size={18}
@@ -47,11 +47,11 @@ export default function CheckoutScreen() {
             </View>
           </View>
 
-          <View className="gap-3 rounded-3xl border border-[#eef2f6] bg-white p-5">
+          <View className="gap-3 rounded-3xl border border-border bg-background p-5">
             <ThemedText type="smallBold" className="text-[14px]">
               Payment
             </ThemedText>
-            <View className="flex-row items-center gap-3 rounded-2xl border border-[#eef2f6] bg-element px-4">
+            <View className="flex-row items-center gap-3 rounded-2xl border border-border bg-element px-4">
               <Ionicons
                 name="card-outline"
                 size={18}
@@ -66,7 +66,7 @@ export default function CheckoutScreen() {
             </View>
           </View>
 
-          <View className="gap-3 rounded-3xl border border-[#eef2f6] bg-white p-5">
+          <View className="gap-3 rounded-3xl border border-border bg-background p-5">
             <ThemedText type="smallBold" className="text-[14px]">
               Order Summary
             </ThemedText>
@@ -78,12 +78,12 @@ export default function CheckoutScreen() {
               <ThemedText themeColor="textSecondary">Delivery</ThemedText>
               <ThemedText type="smallBold">${delivery.toFixed(2)}</ThemedText>
             </View>
-            <View className="mt-1 border-t border-[#eef2f6] pt-3">
+            <View className="mt-1 border-t border-border pt-3">
               <View className="flex-row justify-between">
                 <ThemedText className="font-extrabold text-[16px]">
                   Total
                 </ThemedText>
-                <ThemedText className="font-extrabold text-[16px] text-brand-600">
+                <ThemedText className="font-extrabold text-[16px] text-brand-ink">
                   ${total.toFixed(2)}
                 </ThemedText>
               </View>

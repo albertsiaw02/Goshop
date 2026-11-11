@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Ellipse, G, Path } from 'react-native-svg';
+import { useColorScheme } from 'nativewind';
 
 import { useTheme } from '@/hooks/use-theme';
 import { useCart } from '@/store/cart';
@@ -16,6 +17,16 @@ const CATEGORY_TINT: Record<string, string> = {
   meat: '#fff4f4',
   snacks: '#fffef2',
   drinks: '#eef6ff',
+};
+
+const CATEGORY_TINT_DARK: Record<string, string> = {
+  fruits: '#2b2420',
+  vegetables: '#20291f',
+  dairy: '#1f242c',
+  bakery: '#2c2820',
+  meat: '#2d2121',
+  snacks: '#2a2a24',
+  drinks: '#1f2732',
 };
 
 function ProductArt({ product }: { product: Product }) {
@@ -116,8 +127,10 @@ function ProductArt({ product }: { product: Product }) {
 
 export function ProductCard({ product }: { product: Product }) {
   const theme = useTheme();
+  const { colorScheme } = useColorScheme();
   const { addItem } = useCart();
-  const tint = CATEGORY_TINT[product.category] ?? '#f1f5f9';
+  const isDark = colorScheme === 'dark';
+  const tint = (isDark ? CATEGORY_TINT_DARK : CATEGORY_TINT)[product.category] ?? (isDark ? '#212225' : '#f1f5f9');
   const mrp = product.mrp ?? product.price * 1.45;
   const isFreshTomato = product.id === '5';
   const isSpinach = product.id === '2';
@@ -127,7 +140,11 @@ export function ProductCard({ product }: { product: Product }) {
       accessibilityRole="button"
       accessibilityLabel={`View ${product.name}`}
       onPress={() => router.push({ pathname: '/product/[id]', params: { id: product.id } })}
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
+      style={({ pressed }) => [
+        styles.card,
+        { borderColor: theme.border, backgroundColor: theme.background },
+        pressed && styles.pressed,
+      ]}>
       <View style={[styles.imageWrap, { backgroundColor: tint }]}>
         <View style={styles.artFrame}>
           <ProductArt product={product} />
@@ -137,20 +154,24 @@ export function ProductCard({ product }: { product: Product }) {
           accessibilityLabel={`Save ${product.name}`}
           hitSlop={10}
           onPress={(event) => event.stopPropagation()}
-          style={styles.favourite}>
+          style={[styles.favourite, { backgroundColor: isDark ? '#3a2430' : '#fff4f8', borderColor: isDark ? '#4a3040' : '#f8dfe7' }]}>
           <Ionicons name="heart-outline" size={15} color="#f0679f" />
         </Pressable>
       </View>
 
       <View style={styles.info}>
-        <Text style={styles.meta}>{product.weight}</Text>
+        <Text style={[styles.meta, { color: theme.textSecondary }]}>{product.weight}</Text>
         <Text numberOfLines={1} style={[styles.name, { color: theme.text }]}>
           {product.name}
         </Text>
-        <Text style={styles.metaLabel}>{isFreshTomato || isSpinach ? '10 MINS' : '10 MINS'}</Text>
+        <Text style={[styles.metaLabel, { color: theme.textSecondary }]}>
+          {isFreshTomato || isSpinach ? '10 MINS' : '10 MINS'}
+        </Text>
         <View style={styles.priceRow}>
-          <Text style={styles.price}>₹{product.price.toFixed(0)}</Text>
-          <Text style={[styles.mrp, { color: '#6b7280' }]}>MRP ₹{mrp.toFixed(0)}</Text>
+          <Text style={[styles.price, { color: theme.text }]}>₹{product.price.toFixed(0)}</Text>
+          <Text style={[styles.mrp, { color: theme.textSecondary }]}>
+            MRP ₹{mrp.toFixed(0)}
+          </Text>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`Add ${product.name}`}
@@ -173,10 +194,7 @@ const styles = StyleSheet.create({
     minHeight: 246,
     borderRadius: 18,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#edf1f3',
-    backgroundColor: '#ffffff',
     overflow: 'hidden',
-    shadowColor: '#0f172a',
     shadowOpacity: 0.04,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 6 },
@@ -205,11 +223,9 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#fff4f8',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#f8dfe7',
   },
   info: {
     paddingHorizontal: 12,
@@ -217,7 +233,6 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   meta: {
-    color: '#6b7280',
     fontSize: 11,
     fontWeight: '600',
     marginBottom: 3,
@@ -230,7 +245,6 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   metaLabel: {
-    color: '#6b7280',
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 0.3,
@@ -245,7 +259,6 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#1f2937',
     letterSpacing: -0.35,
   },
   mrp: {

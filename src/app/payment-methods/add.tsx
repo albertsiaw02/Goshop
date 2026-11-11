@@ -116,7 +116,7 @@ export default function AddPaymentMethodScreen() {
               showsVerticalScrollIndicator={false}>
               <PaymentCard compact method={preview} />
 
-              <View className="rounded-3xl border border-[#eef2f6] bg-element px-5 py-2">
+              <View className="rounded-3xl border border-border bg-element px-5 py-2">
                 <View className="mb-2 mt-3 gap-0.5">
                   <ThemedText className="text-[15px] font-bold">Card details</ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">
@@ -170,9 +170,9 @@ export default function AddPaymentMethodScreen() {
                 </View>
               </View>
 
-              <View className="min-h-[64px] flex-row items-center gap-3 rounded-3xl border border-[#eef2f6] bg-element px-5">
+              <View className="min-h-[64px] flex-row items-center gap-3 rounded-3xl border border-border bg-element px-5">
                 <View className="h-9 w-9 items-center justify-center rounded-xl bg-brand-50">
-                  <Ionicons name="star-outline" size={18} color="#16a34a" />
+                  <Ionicons name="star-outline" size={18} color={theme.brandInk} />
                 </View>
                 <View className="flex-1 gap-0.5">
                   <ThemedText className="font-semibold">Set as default</ThemedText>
@@ -199,7 +199,7 @@ export default function AddPaymentMethodScreen() {
               </Pressable>
 
               <View className="flex-row items-center justify-center gap-2">
-                <Ionicons name="lock-closed-outline" size={13} color="#94a3b8" />
+                <Ionicons name="lock-closed-outline" size={13} color={theme.textSecondary} />
                 <ThemedText type="small" themeColor="textSecondary">
                   Your payment details are encrypted.
                 </ThemedText>

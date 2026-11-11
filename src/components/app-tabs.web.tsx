@@ -45,7 +45,7 @@ function TabButton({
     <Pressable {...props} className="items-center gap-0.5 px-4 py-1">
       <Text className="text-[22px]">{emoji}</Text>
       {isFocused ? (
-        <Text className="text-sm font-bold text-brand-600">{label}</Text>
+        <Text className="text-sm font-bold text-brand-ink">{label}</Text>
       ) : (
         <Text className="text-sm text-muted">{label}</Text>
       )}

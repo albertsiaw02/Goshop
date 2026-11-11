@@ -43,7 +43,7 @@ export default function OrdersScreen() {
                 onPress={() =>
                   router.push({ pathname: '/order-tracking/[id]', params: { id: item.id } })
                 }>
-                <View className="flex-row items-center gap-4 rounded-2xl border border-[#eef2f6] bg-white p-4">
+                <View className="flex-row items-center gap-4 rounded-2xl border border-border bg-background p-4">
                   <View
                     className="h-[52px] w-[52px] items-center justify-center rounded-2xl"
                     style={{ backgroundColor: theme.backgroundElement }}>
@@ -56,18 +56,15 @@ export default function OrdersScreen() {
                     <ThemedText type="small" themeColor="textSecondary">
                       {item.date}
                     </ThemedText>
-                    <ThemedText type="smallBold" className="text-brand-600">
+                    <ThemedText type="smallBold" className="text-brand-ink">
                       ${item.total.toFixed(2)}
                     </ThemedText>
                   </View>
                   <View className="items-end gap-2">
-                    <View
-                      className={`rounded-full px-2.5 py-1 ${
-                        inTransit ? 'bg-brand-50' : 'bg-[#e8f9ee]'
-                      }`}>
+                    <View className="rounded-full bg-brand-soft px-2.5 py-1">
                       <Text
                         className={`text-[10px] font-bold ${
-                          inTransit ? 'text-brand-600' : 'text-success'
+                          inTransit ? 'text-brand-ink' : 'text-success'
                         }`}>
                         {item.status}
                       </Text>

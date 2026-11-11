@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/logo.jpg",
     "scheme": "goshop",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "backgroundColor": "#ffffff",
     "ios": {
       "icon": "./assets/expo.icon"

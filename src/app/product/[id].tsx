@@ -67,19 +67,19 @@ export default function ProductDetailsScreen() {
     <ThemedView className="flex-1">
       <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView edges={['top']} className="flex-1">
-        <View className="mx-auto w-full max-w-[600px] flex-1 bg-white">
+        <View className="mx-auto w-full max-w-[600px] flex-1 bg-background">
           <ScrollView
             className="flex-1"
             contentContainerStyle={{ paddingBottom: 20 }}
             showsVerticalScrollIndicator={false}>
             <View
-              className="items-center justify-center bg-[#fff0e8]"
+              className="items-center justify-center bg-[#fff0e8] dark:bg-[#2a211c]"
               style={{ height: Math.min(windowHeight * 0.45, 380) }}>
               <View className="absolute left-5 right-5 top-4 z-10 flex-row items-center justify-between">
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Go back"
-                  className="h-11 w-11 items-center justify-center rounded-full bg-white"
+                  className="h-11 w-11 items-center justify-center rounded-full bg-background"
                   onPress={() =>
                     router.canGoBack() ? router.back() : router.replace('/browse')
                   }>
@@ -89,14 +89,14 @@ export default function ProductDetailsScreen() {
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel="Search products"
-                    className="h-11 w-11 items-center justify-center rounded-full bg-white"
+                    className="h-11 w-11 items-center justify-center rounded-full bg-background"
                     onPress={() => router.push('/browse')}>
                     <Ionicons name="search-outline" size={20} color={theme.text} />
                   </Pressable>
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-                    className="h-11 w-11 items-center justify-center rounded-full bg-white"
+                    className="h-11 w-11 items-center justify-center rounded-full bg-background"
                     onPress={() => setIsFavorite((favorite) => !favorite)}>
                     <Ionicons
                       name={isFavorite ? 'heart' : 'heart-outline'}
@@ -113,14 +113,16 @@ export default function ProductDetailsScreen() {
               )}
             </View>
 
-            <View className="-mt-3 rounded-t-[24px] bg-white px-5 pb-3 pt-4">
+            <View className="-mt-3 rounded-t-[24px] bg-background px-5 pb-3 pt-4">
               <View className="mb-3 flex-row items-center justify-between">
                 <View className="flex-row items-center gap-1.5">
                   <View className="h-1.5 w-1.5 rounded-full bg-[#1f9b67]" />
-                  <Text className="text-[11px] font-semibold text-[#64748b]">10 MINS</Text>
+                  <Text className="text-[11px] font-semibold text-muted">10 MINS</Text>
                 </View>
-                <View className="rounded-md bg-[#edf7ff] px-2.5 py-1">
-                  <Text className="text-[11px] font-bold text-[#3d8ac7]">{product.weight}</Text>
+                <View className="rounded-md bg-[#edf7ff] px-2.5 py-1 dark:bg-[#1c2a3a]">
+                  <Text className="text-[11px] font-bold text-[#3d8ac7] dark:text-[#7fb8e8]">
+                    {product.weight}
+                  </Text>
                 </View>
               </View>
 
@@ -128,15 +130,15 @@ export default function ProductDetailsScreen() {
                 {product.name}
               </ThemedText>
               <View className="mt-1 flex-row items-baseline gap-2">
-                <Text className="text-[17px] font-extrabold text-[#176b50]">
+                <Text className="text-[17px] font-extrabold text-brand-ink">
                   ₹{product.price.toFixed(0)}
                 </Text>
-                <Text className="text-[10px] text-[#64748b]">
+                <Text className="text-[10px] text-muted">
                   MRP <Text className="line-through">₹{mrp.toFixed(0)}</Text>
                 </Text>
               </View>
 
-              <View className="my-3 border-t border-[#edf0f2]" />
+              <View className="my-3 border-t border-border" />
               <ThemedText className="text-[14px] font-bold">About this product</ThemedText>
               <ThemedText className="mt-1 text-[12px] leading-[17px]" themeColor="textSecondary">
                 {product.id === '3'
@@ -159,9 +161,9 @@ export default function ProductDetailsScreen() {
           </ScrollView>
 
           <View
-            className="flex-row items-center gap-3 border-t border-[#f0f1f2] bg-white px-5 pt-3"
+            className="flex-row items-center gap-3 border-t border-border bg-background px-5 pt-3"
             style={{ paddingBottom: Math.max(insets.bottom, 12) }}>
-            <View className="h-12 flex-row items-center rounded-full border border-[#e7ece9] px-1">
+            <View className="h-12 flex-row items-center rounded-full border border-border px-1">
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Decrease quantity"
