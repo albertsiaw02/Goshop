@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, Pressable, TextInput, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useColorScheme } from 'nativewind';
 
 import { ProductCard } from '@/components/product-card';
 import { PromotionCarousel } from '@/components/promotion-carousel';
@@ -12,16 +13,38 @@ import { useTheme } from '@/hooks/use-theme';
 import { useCart } from '@/store/cart';
 
 const STORES = [
-  { name: 'FreshMart', mark: 'F', color: '#e9f7ec', ink: '#23934a' },
-  { name: 'Green Basket', mark: 'G', color: '#fff2df', ink: '#c98222' },
-  { name: 'Daily Market', mark: 'D', color: '#e9efff', ink: '#4968bd' },
-  { name: 'Local Harvest', mark: 'L', color: '#f9e9e8', ink: '#b5544c' },
-];
+  {
+    name: 'FreshMart',
+    mark: 'F',
+    color: { light: '#e9f7ec', dark: 'rgba(35, 147, 74, 0.22)' },
+    ink: { light: '#23934a', dark: '#4ade80' },
+  },
+  {
+    name: 'Green Basket',
+    mark: 'G',
+    color: { light: '#fff2df', dark: 'rgba(201, 130, 34, 0.22)' },
+    ink: { light: '#c98222', dark: '#fbbf24' },
+  },
+  {
+    name: 'Daily Market',
+    mark: 'D',
+    color: { light: '#e9efff', dark: 'rgba(73, 104, 189, 0.22)' },
+    ink: { light: '#4968bd', dark: '#93a8e8' },
+  },
+  {
+    name: 'Local Harvest',
+    mark: 'L',
+    color: { light: '#f9e9e8', dark: 'rgba(181, 84, 76, 0.22)' },
+    ink: { light: '#b5544c', dark: '#e8918a' },
+  },
+] as const;
 
 const FEATURED_PRODUCT_IDS = ['5', '4', '2', '6'];
 
 export default function HomeScreen() {
   const theme = useTheme();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const { count } = useCart();
   const { width: screenWidth } = useWindowDimensions();
   const contentWidth = Math.min(screenWidth, 680) - 40;
@@ -37,19 +60,20 @@ export default function HomeScreen() {
     );
   }, [searchQuery]);
   const featured = FEATURED_PRODUCT_IDS.map((id) => PRODUCTS.find((product) => product.id === id)!).filter(
-    Boolean,
+    (Boolean)
   );
+  const categoryBackgrounds = isDark ? CATEGORY_BACKGROUNDS_DARK : CATEGORY_BACKGROUNDS;
 
   return (
     <ThemedView className="flex-1">
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           <View style={styles.content}>
-            <View style={styles.header}>
-              <View style={styles.location}>
-                <View style={styles.locationIcon}>
-                  <Ionicons name="location" size={17} color="#16a34a" />
-                </View>
+              <View style={styles.header}>
+                <View style={styles.location}>
+                  <View style={[styles.locationIcon, { backgroundColor: theme.brandSoft }]}>
+                    <Ionicons name="location" size={17} color={theme.brandInk} />
+                  </View>
                 <View>
                   <Text style={[styles.eyebrow, { color: theme.textSecondary }]}>DELIVERING TO</Text>
                   <Pressable
@@ -67,7 +91,7 @@ export default function HomeScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={`Open cart, ${count} items`}
                 onPress={() => router.push('/(tabs)/cart')}
-                style={[styles.cartButton, { backgroundColor: theme.backgroundElement }]}>
+                style={[styles.cartButton, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
                 <Ionicons name="bag-outline" size={21} color={theme.text} />
                 {count > 0 && (
                   <View style={styles.cartBadge}>
@@ -79,7 +103,7 @@ export default function HomeScreen() {
 
             <View
               accessibilityRole="search"
-              style={[styles.searchBar, { backgroundColor: theme.backgroundElement }]}>
+              style={[styles.searchBar, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
               <Ionicons name="search-outline" size={20} color={theme.textSecondary} />
               <TextInput
                 value={query}
@@ -95,8 +119,8 @@ export default function HomeScreen() {
                 </Pressable>
               ) : (
                 <>
-                  <View style={styles.searchDivider} />
-                  <Ionicons name="options-outline" size={19} color="#16a34a" />
+                  <View style={[styles.searchDivider, { backgroundColor: theme.border }]} />
+                  <Ionicons name="options-outline" size={19} color={theme.brandInk} />
                 </>
               )}
             </View>
@@ -141,7 +165,7 @@ export default function HomeScreen() {
                   </Text>
                 </View>
                 <Pressable accessibilityRole="button" onPress={() => router.push('/browse')} hitSlop={8}>
-                  <Text style={styles.seeAll}>See all</Text>
+                  <Text style={[styles.seeAll, { color: theme.brandInk }]}>See all</Text>
                 </Pressable>
               </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryList}>
@@ -156,7 +180,8 @@ export default function HomeScreen() {
                       style={[
                         styles.categoryIcon,
                         {
-                          backgroundColor: CATEGORY_BACKGROUNDS[index % CATEGORY_BACKGROUNDS.length],
+                          backgroundColor:
+                            categoryBackgrounds[index % categoryBackgrounds.length],
                         },
                       ]}>
                       <Text style={styles.categoryEmoji}>{category.emoji}</Text>
@@ -176,7 +201,7 @@ export default function HomeScreen() {
                   <Text style={[styles.sectionSubtitle, { color: theme.textSecondary }]}>Loved by shoppers nearby</Text>
                 </View>
                 <Pressable accessibilityRole="button" onPress={() => router.push('/browse')} hitSlop={8}>
-                  <Text style={styles.seeAll}>See all</Text>
+                  <Text style={[styles.seeAll, { color: theme.brandInk }]}>See all</Text>
                 </Pressable>
               </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.storeList}>
@@ -187,9 +212,9 @@ export default function HomeScreen() {
                     key={store.name}
                     onPress={() => router.push('/browse')}
                     style={styles.storeItem}>
-                    <View style={[styles.storeLogo, { backgroundColor: store.color }]}>
-                      <Text style={[styles.storeMark, { color: store.ink }]}>{store.mark}</Text>
-                      <View style={[styles.storeLeaf, { backgroundColor: store.ink }]} />
+                    <View style={[styles.storeLogo, { backgroundColor: store.color[isDark ? 'dark' : 'light'] }]}>
+                      <Text style={[styles.storeMark, { color: store.ink[isDark ? 'dark' : 'light'] }]}>{store.mark}</Text>
+                      <View style={[styles.storeLeaf, { backgroundColor: store.ink[isDark ? 'dark' : 'light'] }]} />
                     </View>
                     <Text numberOfLines={1} style={[styles.storeName, { color: theme.text }]}>
                       {store.name}
@@ -204,8 +229,8 @@ export default function HomeScreen() {
             </View>
 
             <View style={[styles.deliveryStrip, { backgroundColor: theme.backgroundElement }]}>
-              <View style={styles.deliveryIcon}>
-                <Ionicons name="flash" size={17} color="#16a34a" />
+              <View style={[styles.deliveryIcon, { backgroundColor: theme.brandSoft }]}>
+                <Ionicons name="flash" size={17} color={theme.brandInk} />
               </View>
               <View style={styles.deliveryCopy}>
                 <Text style={[styles.deliveryTitle, { color: theme.text }]}>Fresh to your door</Text>
@@ -225,7 +250,7 @@ export default function HomeScreen() {
                   </Text>
                 </View>
                 <Pressable accessibilityRole="button" onPress={() => router.push('/browse')} hitSlop={8}>
-                  <Text style={styles.seeAll}>See all</Text>
+                  <Text style={[styles.seeAll, { color: theme.brandInk }]}>See all</Text>
                 </Pressable>
               </View>
               <View style={styles.productGrid} onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}>
@@ -246,6 +271,14 @@ export default function HomeScreen() {
 }
 
 const CATEGORY_BACKGROUNDS = ['#fff0e5', '#e8f5e9', '#eff0ff', '#fff5dc', '#ffe9e8', '#e5f4f0'];
+const CATEGORY_BACKGROUNDS_DARK = [
+  'rgba(251, 146, 60, 0.16)',
+  'rgba(34, 197, 94, 0.16)',
+  'rgba(99, 102, 241, 0.16)',
+  'rgba(234, 179, 8, 0.16)',
+  'rgba(244, 63, 94, 0.16)',
+  'rgba(20, 184, 166, 0.16)',
+];
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -278,7 +311,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#dcfce7',
   },
   eyebrow: {
     fontSize: 9,
@@ -302,7 +334,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#e2e8f0',
   },
   cartDot: {
     position: 'absolute',
@@ -343,7 +374,6 @@ const styles = StyleSheet.create({
     gap: 11,
     marginBottom: 20,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#e2e8f0',
   },
   searchInput: {
     flex: 1,
@@ -353,7 +383,6 @@ const styles = StyleSheet.create({
   searchDivider: {
     width: 1,
     height: 21,
-    backgroundColor: '#e2e8f0',
     marginHorizontal: 2,
   },
   section: {
@@ -375,7 +404,6 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   seeAll: {
-    color: '#16a34a',
     fontSize: 12,
     fontWeight: '700',
   },
@@ -464,7 +492,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: '#dcfce7',
     alignItems: 'center',
     justifyContent: 'center',
   },

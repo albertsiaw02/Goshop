@@ -13,6 +13,11 @@ const BACKGROUND_BY_TYPE: Record<ThemeColor, string> = {
   backgroundSelected: 'bg-selected',
   text: 'bg-content',
   textSecondary: 'bg-muted',
+  border: 'bg-border',
+  brandSoft: 'bg-brand-soft',
+  brandInk: 'bg-brand-ink',
+  dangerSoft: 'bg-danger-soft',
+  placeholder: 'bg-placeholder',
 };
 
 export function ThemedView({ style, type, className = '', ...otherProps }: ThemedViewProps) {

@@ -17,7 +17,7 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <ThemedView type="backgroundElement" className="rounded-3xl border border-[#eef2f6] px-5 py-2">
+    <ThemedView type="backgroundElement" className="rounded-3xl border border-border px-5 py-2">
       <View className="mb-1 mt-3 gap-0.5">
         <ThemedText className="text-[15px] font-bold">{title}</ThemedText>
         {description ? (

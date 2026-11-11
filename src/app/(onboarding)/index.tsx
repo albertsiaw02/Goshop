@@ -22,6 +22,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useTheme } from '@/hooks/use-theme';
+
 const SLIDES = [
   {
     image: require('@/assets/images/onboardimg1.jpg'),
@@ -44,6 +46,7 @@ const SWIPE_THUMB = 52;
 const SWIPE_PAD = 6;
 
 function SwipeToGetStarted({ onComplete }: { onComplete: () => void }) {
+  const theme = useTheme();
   const width = useSharedValue(0);
   const translateX = useSharedValue(0);
 
@@ -73,7 +76,7 @@ function SwipeToGetStarted({ onComplete }: { onComplete: () => void }) {
   return (
     <GestureDetector gesture={panGesture}>
       <View
-        className="relative h-16 w-full overflow-hidden rounded-full bg-white"
+        className="relative h-16 w-full overflow-hidden rounded-full bg-element"
         onLayout={(e) => {
           width.value = e.nativeEvent.layout.width;
         }}>
@@ -95,8 +98,8 @@ function SwipeToGetStarted({ onComplete }: { onComplete: () => void }) {
 
         {/* Right check circle */}
         <View className="absolute right-2 top-1.5 bottom-1.5 items-center justify-center">
-          <View className="h-10 w-10 items-center justify-center rounded-full border border-white bg-white/0">
-            <Ionicons name="checkmark" size={18} color="#16a34a" />
+          <View className="h-10 w-10 items-center justify-center rounded-full border border-border bg-transparent">
+            <Ionicons name="checkmark" size={18} color={theme.brandInk} />
           </View>
         </View>
       </View>

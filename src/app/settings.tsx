@@ -16,10 +16,12 @@ import { SettingsRow, ToggleRow } from '@/components/settings-rows';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useTheme } from '@/hooks/use-theme';
+import { useThemePreference } from '@/store/theme';
 
 const TABS = [
-  { key: 'personal', label: 'Personal info', icon: 'person-outline' },
+  { key: 'personal', label: 'Personal', icon: 'person-outline' },
   { key: 'security', label: 'Security', icon: 'shield-checkmark-outline' },
+  { key: 'theme', label: 'Theme', icon: 'color-palette-outline' },
 ] as const;
 
 type TabKey = (typeof TABS)[number]['key'];
@@ -34,7 +36,7 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <ThemedView type="backgroundElement" className="rounded-3xl border border-[#eef2f6] px-5 py-2">
+    <ThemedView type="backgroundElement" className="rounded-3xl border border-border px-5 py-2">
       <View className="mb-1 mt-3 gap-0.5">
         <ThemedText className="text-[15px] font-bold">{title}</ThemedText>
         {description ? (
@@ -73,11 +75,11 @@ function Field({
       <TextInput
         accessibilityLabel={label}
         autoCapitalize={autoCapitalize}
-        className="rounded-xl border border-[#e2e8f0] bg-background px-4 py-3 text-base text-content"
+        className="rounded-xl border border-border bg-background px-4 py-3 text-base text-content"
         keyboardType={keyboardType}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={theme.textSecondary}
+        placeholderTextColor={theme.placeholder}
         value={value}
       />
     </View>
@@ -87,6 +89,7 @@ function Field({
 export default function ProfileSettingsScreen() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const { themes, preference, setTheme } = useThemePreference();
   const [activeTab, setActiveTab] = useState<TabKey>('personal');
 
   const [name, setName] = useState('Albert Kay');
@@ -149,7 +152,7 @@ export default function ProfileSettingsScreen() {
                   <Ionicons
                     name={tab.icon}
                     size={15}
-                    color={active ? '#16a34a' : theme.textSecondary}
+                    color={active ? theme.brandInk : theme.textSecondary}
                   />
                   <ThemedText
                     type="small"
@@ -173,8 +176,8 @@ export default function ProfileSettingsScreen() {
               {activeTab === 'personal' ? (
                 <>
                   <View className="items-center pb-1 pt-2">
-                    <View className="mb-3 h-[88px] w-[88px] items-center justify-center rounded-full bg-brand-100">
-                      <ThemedText className="text-[30px] font-extrabold text-brand-600">
+                    <View className="mb-3 h-[88px] w-[88px] items-center justify-center rounded-full bg-brand-soft">
+                      <ThemedText className="text-[30px] font-extrabold text-brand-ink">
                         {initials}
                       </ThemedText>
                     </View>
@@ -185,7 +188,7 @@ export default function ProfileSettingsScreen() {
                         Alert.alert('Profile photo', 'Photo uploads are coming soon.')
                       }
                       style={({ pressed }) => (pressed ? { opacity: 0.65 } : undefined)}>
-                      <ThemedText type="small" className="font-semibold text-brand-600">
+                      <ThemedText type="small" className="font-semibold text-brand-ink">
                         Change photo
                       </ThemedText>
                     </Pressable>
@@ -302,6 +305,61 @@ export default function ProfileSettingsScreen() {
                       }
                     />
                   </Section>
+                </>
+              ) : null}
+
+              {activeTab === 'theme' ? (
+                <>
+                  <Section
+                    title="Appearance"
+                    description="Choose how GoShop looks on this device.">
+                    {themes.map((option) => {
+                      const active = option.key === preference;
+                      return (
+                        <Pressable
+                          accessibilityRole="radio"
+                          accessibilityState={{ selected: active }}
+                          accessibilityLabel={option.label}
+                          key={option.key}
+                          onPress={() => setTheme(option.key)}
+                          style={({ pressed }) => (pressed ? { opacity: 0.65 } : undefined)}
+                          className="min-h-[56px] flex-row items-center gap-3">
+                          <View
+                            className={`h-9 w-9 items-center justify-center rounded-xl ${
+                              active ? 'bg-brand-500' : 'bg-brand-soft'
+                            }`}>
+                            <Ionicons
+                              name={option.icon}
+                              size={16}
+                              color={active ? '#ffffff' : theme.brandInk}
+                            />
+                          </View>
+                          <View className="flex-1 gap-0.5">
+                            <ThemedText className="font-semibold">{option.label}</ThemedText>
+                            <ThemedText type="small" themeColor="textSecondary">
+                              {option.description}
+                            </ThemedText>
+                          </View>
+                          <Ionicons
+                            name={active ? 'checkmark-circle' : 'ellipse-outline'}
+                            size={22}
+                            color={active ? theme.brandInk : theme.textSecondary}
+                          />
+                        </Pressable>
+                      );
+                    })}
+                  </Section>
+
+                  <View className="flex-row items-center justify-center gap-2">
+                    <Ionicons
+                      name="information-circle-outline"
+                      size={14}
+                      color={theme.textSecondary}
+                    />
+                    <ThemedText type="small" themeColor="textSecondary">
+                      System default follows your device settings.
+                    </ThemedText>
+                  </View>
                 </>
               ) : null}
 

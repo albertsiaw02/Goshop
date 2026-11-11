@@ -33,16 +33,10 @@ type ProfileRowProps = {
 
 function ProfileRow({ icon, label, description, value, onPress }: ProfileRowProps) {
   const theme = useTheme();
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`${label}${value ? `, ${value}` : ''}`}
-      className="min-h-[72px] flex-row items-center gap-3.5"
-      onPress={onPress}
-      style={({ pressed }) => (pressed ? { opacity: 0.65 } : undefined)}>
-      <View className="h-11 w-11 items-center justify-center rounded-2xl bg-brand-50">
-        <Ionicons name={icon} size={21} color="#15803d" />
+  const content = (
+    <>
+      <View className="h-10 w-10 items-center justify-center rounded-xl bg-background">
+        <Ionicons name={icon} size={20} color={theme.brandInk} />
       </View>
       <View className="flex-1 gap-0.5">
         <ThemedText className="text-[14px] font-semibold">{label}</ThemedText>
@@ -102,25 +96,12 @@ function QuickLink({
   const theme = useTheme();
 
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      onPress={onPress}
-      className="min-h-[104px] flex-1 justify-between rounded-[22px] border p-4"
-      style={({ pressed }) => [
-        { backgroundColor: theme.backgroundElement, borderColor: theme.backgroundSelected },
-        pressed ? { opacity: 0.7 } : undefined,
-      ]}>
-      <View className="h-10 w-10 items-center justify-center rounded-2xl bg-brand-50">
-        <Ionicons name={icon} size={20} color="#15803d" />
-      </View>
-      <View className="gap-0.5">
-        <ThemedText className="text-[14px] font-bold">{label}</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary" className="text-[11px]">
-          {description}
-        </ThemedText>
-      </View>
-    </Pressable>
+    <ThemedView type="backgroundElement" className="rounded-3xl border border-border px-5 py-3">
+      <ThemedText type="smallBold" className="mb-1 mt-2 text-[16px]">
+        {title}
+      </ThemedText>
+      {children}
+    </ThemedView>
   );
 }
 
@@ -132,126 +113,15 @@ export default function ProfileScreen() {
 
   return (
     <ThemedView className="flex-1">
-      <SafeAreaView edges={['top']} className="flex-1">
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
-          <View className="mx-auto w-full max-w-[680px] gap-6 px-5 pt-3">
-            <View className="flex-row items-center justify-between">
-              <View className="gap-1">
-                <ThemedText className="text-[26px] font-extrabold leading-8 tracking-tight">
-                  My account
-                </ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
-                  Your details and preferences
-                </ThemedText>
-              </View>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Edit profile"
-                onPress={() => router.push('/settings')}
-                className="h-11 w-11 items-center justify-center rounded-full border border-[#eef2f6] bg-white"
-                style={({ pressed }) => [
-                  { backgroundColor: theme.backgroundElement, borderColor: theme.backgroundSelected },
-                  pressed ? { opacity: 0.65 } : undefined,
-                ]}>
-                <Ionicons name="create-outline" size={21} color={theme.text} />
-              </Pressable>
-            </View>
-
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Edit profile"
-              onPress={() => router.push('/settings')}
-              style={({ pressed }) => (pressed ? { opacity: 0.92 } : undefined)}>
-              <LinearGradient
-                colors={['#15803d', '#166534']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.profileCard}>
-                <View style={styles.profileCardDecor} />
-                <View className="flex-row items-center gap-4">
-                  <View className="h-[68px] w-[68px] items-center justify-center rounded-full border-[3px] border-white/40 bg-white/15">
-                    <Text className="text-[22px] font-extrabold text-white">{INITIALS}</Text>
-                  </View>
-                  <View className="flex-1 gap-1">
-                    <Text className="text-[11px] font-bold uppercase tracking-[1.4px] text-white/75">
-                      Welcome back
-                    </Text>
-                    <Text className="text-[21px] font-extrabold leading-7 text-white">
-                      {PROFILE.name}
-                    </Text>
-                    <Text className="text-[13px] font-medium text-white/80">{PROFILE.email}</Text>
-                  </View>
-                  <View className="h-9 w-9 items-center justify-center rounded-full bg-white/15">
-                    <Ionicons name="chevron-forward" size={18} color="#ffffff" />
-                  </View>
-                </View>
-              </LinearGradient>
-            </Pressable>
-
-            <View className="flex-row gap-3">
-              <QuickLink
-                icon="receipt-outline"
-                label="My orders"
-                description="Track your purchases"
-                onPress={() => router.push('/orders')}
-              />
-              <QuickLink
-                icon="card-outline"
-                label="Payments"
-                description="Manage your cards"
-                onPress={() => router.push('/payment-methods')}
-              />
-            </View>
-
-            <ProfileSection title="Account">
-              <ProfileRow
-                icon="location-outline"
-                label="Delivery address"
-                description="Where should we deliver?"
-                value="Home"
-                onPress={() => router.push('/delivery')}
-              />
-              <View className="h-px" style={{ backgroundColor: theme.backgroundSelected }} />
-              <ProfileRow
-                icon="card-outline"
-                label="Payment methods"
-                description="Your preferred way to pay"
-                value={defaultMethod ? getPaymentMethodLabel(defaultMethod) : 'Add method'}
-                onPress={() => router.push('/payment-methods')}
-              />
-            </ProfileSection>
-
-            <ProfileSection title="Preferences">
-              <ProfileRow
-                icon="notifications-outline"
-                label="Notifications"
-                description="Choose what you hear from us"
-                value="Manage"
-                onPress={() => router.push('/notifications')}
-              />
-              <View className="h-px" style={{ backgroundColor: theme.backgroundSelected }} />
-              <ProfileRow
-                icon="language-outline"
-                label="Language"
-                description="App display language"
-                value={language.label}
-                onPress={() => router.push('/language')}
-              />
-            </ProfileSection>
-
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => router.replace('/(onboarding)')}
-              className="min-h-[58px] flex-row items-center justify-center gap-2 rounded-2xl border border-[#fee2e2]"
-              style={({ pressed }) => [
-                { backgroundColor: theme.backgroundElement },
-                pressed ? { opacity: 0.65 } : undefined,
-              ]}>
-              <Ionicons name="log-out-outline" size={19} color="#dc2626" />
-              <Text className="text-[14px] font-bold text-danger">Sign out</Text>
-            </Pressable>
+      <ScrollView
+        className="flex-1"
+        contentContainerClassName="w-full max-w-[800px] self-center gap-5 px-5 pb-8 pt-7"
+        showsVerticalScrollIndicator={false}>
+        <View className="items-center pb-3 pt-2">
+          <View className="mb-3 h-[92px] w-[92px] items-center justify-center overflow-hidden rounded-full border-4 border-background bg-brand-soft">
+            <ThemedText className="text-[32px] font-extrabold leading-10 text-brand-ink">
+              {INITIALS}
+            </ThemedText>
           </View>
         </ScrollView>
       </SafeAreaView>

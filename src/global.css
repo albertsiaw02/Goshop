@@ -10,4 +10,28 @@
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
   --font-rounded: 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif;
   --font-serif: Georgia, 'Times New Roman', serif;
+
+  --color-background: 255 255 255;
+  --color-element: 241 245 249;
+  --color-selected: 226 232 240;
+  --color-content: 15 23 42;
+  --color-muted: 100 116 139;
+  --color-border: 238 242 246;
+  --color-brand-soft: 220 252 231;
+  --color-brand-ink: 21 128 61;
+  --color-danger-soft: 254 242 242;
+  --color-placeholder: 148 163 184;
+}
+
+.dark:root {
+  --color-background: 0 0 0;
+  --color-element: 33 34 37;
+  --color-selected: 46 49 53;
+  --color-content: 255 255 255;
+  --color-muted: 176 180 186;
+  --color-border: 42 45 49;
+  --color-brand-soft: 29 53 38;
+  --color-brand-ink: 74 222 128;
+  --color-danger-soft: 64 32 31;
+  --color-placeholder: 107 114 128;
 }

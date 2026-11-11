@@ -43,7 +43,7 @@ export default function CartScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Go back"
-              className="h-10 w-10 items-center justify-center rounded-full border border-[#eef2f6]"
+              className="h-10 w-10 items-center justify-center rounded-full border border-border"
               onPress={() =>
                 router.canGoBack() ? router.back() : router.replace("/browse")
               }
@@ -63,8 +63,8 @@ export default function CartScreen() {
 
           {rows.length === 0 ? (
             <View className="flex-1 items-center justify-center gap-4">
-              <View className="h-20 w-20 items-center justify-center rounded-full bg-brand-50">
-                <Ionicons name="cart-outline" size={38} color="#16a34a" />
+              <View className="h-20 w-20 items-center justify-center rounded-full bg-brand-soft">
+                <Ionicons name="cart-outline" size={38} color={theme.brandInk} />
               </View>
               <ThemedText className="text-[18px] font-bold">
                 Your cart is empty
@@ -99,7 +99,7 @@ export default function CartScreen() {
                       key={product.id}
                       className={`flex-row items-center gap-3 py-4 ${
                         index < rows.length - 1
-                          ? "border-b border-[#eef2f6]"
+                          ? "border-b border-border"
                           : ""
                       }`}
                     >
@@ -145,7 +145,7 @@ export default function CartScreen() {
                             <Pressable
                               accessibilityRole="button"
                               accessibilityLabel={`Decrease ${product.name} quantity`}
-                              className="h-9 w-9 items-center justify-center rounded-xl border border-[#e5e7eb]"
+                              className="h-9 w-9 items-center justify-center rounded-xl border border-border"
                               onPress={() => setQty(product.id, item.qty - 1)}
                             >
                               <Ionicons
@@ -163,7 +163,7 @@ export default function CartScreen() {
                               className="h-9 w-9 items-center justify-center rounded-xl border border-brand-400"
                               onPress={() => setQty(product.id, item.qty + 1)}
                             >
-                              <Ionicons name="add" size={17} color="#16a34a" />
+                              <Ionicons name="add" size={17} color={theme.brandInk} />
                             </Pressable>
                           </View>
                         </View>
@@ -172,7 +172,7 @@ export default function CartScreen() {
                   ))}
                 </View>
 
-                <View className="mt-3 gap-3 border-t border-[#eef2f6] pt-5">
+                <View className="mt-3 gap-3 border-t border-border pt-5">
                   <View className="flex-row justify-between">
                     <ThemedText
                       className="text-[14px]"
@@ -195,11 +195,11 @@ export default function CartScreen() {
                       ${DELIVERY_FEE.toFixed(2)}
                     </ThemedText>
                   </View>
-                  <View className="mt-1 flex-row justify-between border-t border-[#eef2f6] pt-4">
+                  <View className="mt-1 flex-row justify-between border-t border-border pt-4">
                     <ThemedText className="text-[16px] font-bold">
                       Total
                     </ThemedText>
-                    <ThemedText className="text-[16px] font-bold text-brand-600">
+                    <ThemedText className="text-[16px] font-bold text-brand-ink">
                       ${total.toFixed(2)}
                     </ThemedText>
                   </View>

@@ -32,9 +32,9 @@ export function SettingsRow({
       style={({ pressed }) => (pressed ? { opacity: 0.65 } : undefined)}>
       <View
         className={`h-9 w-9 items-center justify-center rounded-xl ${
-          danger ? 'bg-[#fee2e2]' : 'bg-brand-50'
+          danger ? 'bg-danger-soft' : 'bg-brand-soft'
         }`}>
-        <Ionicons name={icon} size={18} color={danger ? '#dc2626' : '#16a34a'} />
+        <Ionicons name={icon} size={18} color={danger ? '#dc2626' : theme.brandInk} />
       </View>
       <ThemedText className={`flex-1 ${danger ? 'font-semibold text-danger' : ''}`}>
         {label}
@@ -68,8 +68,8 @@ export function ToggleRow({
 
   return (
     <View className="min-h-[64px] flex-row items-center gap-3">
-      <View className="h-9 w-9 items-center justify-center rounded-xl bg-brand-50">
-        <Ionicons name={icon} size={18} color="#16a34a" />
+      <View className="h-9 w-9 items-center justify-center rounded-xl bg-brand-soft">
+        <Ionicons name={icon} size={18} color={theme.brandInk} />
       </View>
       <View className="flex-1 gap-0.5">
         <ThemedText className="font-semibold">{label}</ThemedText>

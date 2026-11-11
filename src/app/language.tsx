@@ -29,7 +29,7 @@ export default function LanguageScreen() {
             showsVerticalScrollIndicator={false}>
             <ThemedView
               type="backgroundElement"
-              className="rounded-3xl border border-[#eef2f6] px-5 py-2">
+              className="rounded-3xl border border-border px-5 py-2">
               <View className="mb-1 mt-3 gap-0.5">
                 <ThemedText className="text-[15px] font-bold">App language</ThemedText>
                 <ThemedText type="small" themeColor="textSecondary">
@@ -50,12 +50,12 @@ export default function LanguageScreen() {
                     className="min-h-[56px] flex-row items-center gap-3">
                     <View
                       className={`h-9 w-9 items-center justify-center rounded-xl ${
-                        active ? 'bg-brand-500' : 'bg-brand-50'
+                        active ? 'bg-brand-500' : 'bg-brand-soft'
                       }`}>
                       <ThemedText
                         type="smallBold"
                         className={`text-[12px] uppercase ${
-                          active ? 'text-white' : 'text-brand-600'
+                          active ? 'text-white' : 'text-brand-ink'
                         }`}>
                         {item.code}
                       </ThemedText>
@@ -71,7 +71,7 @@ export default function LanguageScreen() {
                     <Ionicons
                       name={active ? 'checkmark-circle' : 'ellipse-outline'}
                       size={22}
-                      color={active ? '#16a34a' : theme.textSecondary}
+                      color={active ? theme.brandInk : theme.textSecondary}
                     />
                   </Pressable>
                 );
@@ -79,7 +79,7 @@ export default function LanguageScreen() {
             </ThemedView>
 
             <View className="flex-row items-center justify-center gap-2">
-              <Ionicons name="information-circle-outline" size={14} color="#94a3b8" />
+              <Ionicons name="information-circle-outline" size={14} color={theme.placeholder} />
               <ThemedText type="small" themeColor="textSecondary">
                 More languages are on the way.
               </ThemedText>
