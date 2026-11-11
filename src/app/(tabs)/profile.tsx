@@ -110,8 +110,9 @@ export default function ProfileScreen() {
 
         <ProfileSection title="Preferences">
           <ProfileRow
-            icon="person-circle-outline"
-            label="Profile"
+            icon="settings-outline"
+            label="Settings"
+            value="Personal, theme, security"
             onPress={() => router.push('/settings')}
           />
           <ProfileRow
