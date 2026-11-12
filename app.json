@@ -4,7 +4,7 @@
     "slug": "goshop",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/logo.jpg",
+    "icon": "./assets/images/logo.png",
     "scheme": "goshop",
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#ffffff",
@@ -23,7 +23,7 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#22c55e",
-          "image": "./assets/images/logo.jpg",
+          "image": "./assets/images/logo.png",
           "imageWidth": 128
         }
       ],

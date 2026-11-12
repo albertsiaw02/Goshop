@@ -1,9 +1,70 @@
 import { Ionicons } from '@expo/vector-icons';
-import type { ComponentProps } from 'react';
-import { Pressable, Switch, View } from 'react-native';
+import type { ComponentProps, ReactNode } from 'react';
+import { Pressable, Switch, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
 import { useTheme } from '@/hooks/use-theme';
+
+export function SettingsSection({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: ReactNode;
+}) {
+  return (
+    <ThemedView type="backgroundElement" className="rounded-3xl border border-border px-5 py-2">
+      <View className="mb-1 mt-3 gap-0.5">
+        <ThemedText className="text-[15px] font-bold">{title}</ThemedText>
+        {description ? (
+          <ThemedText type="small" themeColor="textSecondary">
+            {description}
+          </ThemedText>
+        ) : null}
+      </View>
+      {children}
+    </ThemedView>
+  );
+}
+
+export function SettingsField({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  keyboardType,
+  autoCapitalize,
+}: {
+  label: string;
+  value: string;
+  onChangeText: (value: string) => void;
+  placeholder: string;
+  keyboardType?: 'default' | 'email-address' | 'phone-pad';
+  autoCapitalize?: 'none' | 'words';
+}) {
+  const theme = useTheme();
+
+  return (
+    <View className="mb-3 gap-2">
+      <ThemedText type="small" themeColor="textSecondary" className="font-semibold">
+        {label}
+      </ThemedText>
+      <TextInput
+        accessibilityLabel={label}
+        autoCapitalize={autoCapitalize}
+        className="rounded-xl border border-border bg-background px-4 py-3 text-base text-content"
+        keyboardType={keyboardType}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor={theme.placeholder}
+        value={value}
+      />
+    </View>
+  );
+}
 
 export type SettingsRowProps = {
   icon: ComponentProps<typeof Ionicons>['name'];

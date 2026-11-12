@@ -34,7 +34,7 @@ export function AnimatedSplashOverlay() {
 
   const image = (
     <Image
-      source={require('@/assets/images/logo.jpg')}
+      source={require('@/assets/images/logo.png')}
       contentFit="contain"
       className="h-32 w-32"
     />
