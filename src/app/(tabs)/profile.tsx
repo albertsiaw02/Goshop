@@ -123,8 +123,65 @@ export default function ProfileScreen() {
               {INITIALS}
             </ThemedText>
           </View>
-        </ScrollView>
-      </SafeAreaView>
+          <ThemedText className="text-[25px] font-bold leading-8">{PROFILE.name}</ThemedText>
+          <ThemedText themeColor="textSecondary" className="mt-1">
+            {PROFILE.email}
+          </ThemedText>
+        </View>
+
+        <ProfileSection title="Shopping">
+          <ProfileRow
+            icon="receipt-outline"
+            label="My orders"
+            onPress={() => router.push('/orders')}
+          />
+          <ProfileRow
+            icon="card-outline"
+            label="Payment methods"
+            value={defaultMethod ? getPaymentMethodLabel(defaultMethod) : 'Add method'}
+            onPress={() => router.push('/payment-methods')}
+          />
+        </ProfileSection>
+
+        <ProfileSection title="Preferences">
+          <ProfileRow
+            icon="settings-outline"
+            label="Settings"
+            value="Personal, theme, security"
+            onPress={() => router.push('/settings')}
+          />
+          <ProfileRow
+            icon="location-outline"
+            label="Delivery address"
+            value="Home"
+            onPress={() => router.push('/delivery')}
+          />
+          <ProfileRow
+            icon="notifications-outline"
+            label="Notifications"
+            value="Manage"
+            onPress={() => router.push('/notifications')}
+          />
+          <ProfileRow
+            icon="language-outline"
+            label="Language"
+            value={language.label}
+            onPress={() => router.push('/language')}
+          />
+        </ProfileSection>
+
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.replace('/(onboarding)')}
+          style={({ pressed }) => (pressed ? { opacity: 0.65 } : undefined)}>
+          <ThemedView
+            type="backgroundElement"
+            className="min-h-[58px] flex-row items-center gap-3 rounded-2xl px-5">
+            <Ionicons name="log-out-outline" size={20} color="#d64545" />
+            <ThemedText className="font-semibold text-danger">Sign out</ThemedText>
+          </ThemedView>
+        </Pressable>
+      </ScrollView>
     </ThemedView>
   );
 }
