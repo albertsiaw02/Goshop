@@ -37,6 +37,7 @@ export function SettingsField({
   placeholder,
   keyboardType,
   autoCapitalize,
+  icon,
 }: {
   label: string;
   value: string;
@@ -44,24 +45,35 @@ export function SettingsField({
   placeholder: string;
   keyboardType?: 'default' | 'email-address' | 'phone-pad';
   autoCapitalize?: 'none' | 'words';
+  icon?: ComponentProps<typeof Ionicons>['name'];
 }) {
   const theme = useTheme();
 
   return (
-    <View className="mb-3 gap-2">
+    <View className="mb-3 gap-1.5">
       <ThemedText type="small" themeColor="textSecondary" className="font-semibold">
         {label}
       </ThemedText>
-      <TextInput
-        accessibilityLabel={label}
-        autoCapitalize={autoCapitalize}
-        className="rounded-xl border border-border bg-background px-4 py-3 text-base text-content"
-        keyboardType={keyboardType}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        placeholderTextColor={theme.placeholder}
-        value={value}
-      />
+      <View className="flex-row items-center rounded-xl border border-border bg-background px-3.5">
+        {icon ? (
+          <Ionicons
+            name={icon}
+            size={18}
+            color={theme.textSecondary}
+            style={{ marginRight: 8 }}
+          />
+        ) : null}
+        <TextInput
+          accessibilityLabel={label}
+          autoCapitalize={autoCapitalize}
+          className="flex-1 py-3 text-base text-content"
+          keyboardType={keyboardType}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor={theme.placeholder}
+          value={value}
+        />
+      </View>
     </View>
   );
 }
