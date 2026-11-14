@@ -6,7 +6,7 @@ const TABS = [
   { name: 'browse', href: '/browse', emoji: '🛍️', label: 'Browse' },
   { name: 'cart', href: '/cart', emoji: '🛒', label: 'Cart' },
   { name: 'orders', href: '/orders', emoji: '📦', label: 'Orders' },
-  { name: 'profile', href: '/profile', emoji: '⚙️', label: 'Settings' },
+  { name: 'settings', href: '/settings', emoji: '⚙️', label: 'Settings' },
 ] as const;
 
 export default function AppTabs() {
