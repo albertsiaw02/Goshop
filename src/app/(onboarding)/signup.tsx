@@ -4,20 +4,54 @@ import { Pressable, Text, TextInput, View } from 'react-native';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-// SVG social icons (imported as components via metro transformer)
-import GoogleLogo from '@/assets/expo.icon/google-icon-svgrepo-com.svg';
-import AppleLogo from '@/assets/expo.icon/apple-173-svgrepo-com.svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/hooks/use-theme';
+import { useAuth } from '@/store/auth';
 
 export default function SignupScreen() {
   const theme = useTheme();
+  const { initializationError, isLoading, register } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const submit = async () => {
+    if (isLoading || isSubmitting) return;
+    const normalizedName = name.trim();
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedName) {
+      setErrorMessage('Enter your name.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      setErrorMessage('Enter a valid email address.');
+      return;
+    }
+    if (password.length < 8) {
+      setErrorMessage('Your password must be at least 8 characters.');
+      return;
+    }
+    if (!agreeTerms) {
+      setErrorMessage('Please agree to the Terms and Conditions to continue.');
+      return;
+    }
+
+    setErrorMessage(null);
+    setIsSubmitting(true);
+    try {
+      await register(normalizedName, normalizedEmail, password);
+      router.replace('/(tabs)');
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to create your account. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <View className="flex-1 bg-background">
@@ -33,6 +67,9 @@ export default function SignupScreen() {
             <TextInput
               placeholder="Full Name"
               placeholderTextColor={theme.placeholder}
+              autoComplete="name"
+              textContentType="name"
+              editable={!isSubmitting}
               value={name}
               onChangeText={setName}
               className="flex-1 text-base text-content"
@@ -46,6 +83,9 @@ export default function SignupScreen() {
               placeholderTextColor={theme.placeholder}
               autoCapitalize="none"
               keyboardType="email-address"
+              autoComplete="email"
+              textContentType="emailAddress"
+              editable={!isSubmitting}
               value={email}
               onChangeText={setEmail}
               className="flex-1 text-base text-content"
@@ -58,6 +98,11 @@ export default function SignupScreen() {
               placeholder="Enter Your Password"
               placeholderTextColor={theme.placeholder}
               secureTextEntry={!showPassword}
+              autoComplete="new-password"
+              textContentType="newPassword"
+              returnKeyType="done"
+              onSubmitEditing={submit}
+              editable={!isSubmitting}
               value={password}
               onChangeText={setPassword}
               className="flex-1 text-base text-content"
@@ -67,41 +112,34 @@ export default function SignupScreen() {
             </Pressable>
           </View>
 
-          <Pressable className="flex-row items-center gap-2 mt-1" onPress={() => setAgreeTerms(!agreeTerms)} hitSlop={8}>
+          <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: agreeTerms }} className="flex-row items-center gap-2 mt-1" onPress={() => setAgreeTerms(!agreeTerms)} hitSlop={8}>
             <View className={`h-5 w-5 rounded border items-center justify-center ${agreeTerms ? 'bg-brand-500 border-brand-500' : 'border-border'}`}>
               {agreeTerms && <Ionicons name="checkmark" size={14} color="#fff" />}
             </View>
             <Text className="text-sm text-muted">I agree with the Terms and Conditions</Text>
           </Pressable>
 
+          {(errorMessage || initializationError) ? (
+            <Text accessibilityRole="alert" className="text-sm text-danger">
+              {errorMessage ?? initializationError}
+            </Text>
+          ) : null}
+
           <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled: isLoading || isSubmitting }}
+            disabled={isLoading || isSubmitting}
             style={({ pressed }) => (pressed ? { opacity: 0.9 } : undefined)}
-            onPress={() => router.replace('/(tabs)')}
+            onPress={submit}
             className="mt-4 overflow-hidden rounded-2xl">
             <LinearGradient colors={['#16a34a', '#15803d']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
               <View className="items-center py-4">
-                <Text className="text-[18px] font-bold text-white shadow-sm">Sign Up</Text>
+                <Text className="text-[18px] font-bold text-white shadow-sm">
+                  {isLoading ? 'Restoring Session...' : isSubmitting ? 'Creating Account...' : 'Sign Up'}
+                </Text>
               </View>
             </LinearGradient>
           </Pressable>
-        </View>
-
-        <View className="mt-8 items-center">
-          <Text className="text-sm text-muted font-medium">— Or Continue With —</Text>
-          <View className="mt-5 flex-row gap-4">
-            <Pressable className="flex-row items-center justify-center flex-1 rounded-2xl bg-background border border-border py-3.5 shadow-sm">
-              <View className="mr-3" style={{ width: 20, height: 20 }}>
-                <GoogleLogo width={20} height={20} />
-              </View>
-              <Text className="font-semibold text-content">Google</Text>
-            </Pressable>
-            <Pressable className="flex-row items-center justify-center flex-1 rounded-2xl bg-background border border-border py-3.5 shadow-sm">
-              <View className="mr-3" style={{ width: 20, height: 20 }}>
-                <AppleLogo width={20} height={20} />
-              </View>
-              <Text className="font-semibold text-content">Apple</Text>
-            </Pressable>
-          </View>
         </View>
 
         <View className="mt-8 flex-row justify-center items-center">

@@ -1,27 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import type { ComponentProps, ReactNode } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { useState, type ComponentProps, type ReactNode } from 'react';
+import { Alert, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useTheme } from '@/hooks/use-theme';
+import { useAuth } from '@/store/auth';
 import { useLanguage } from '@/store/language';
 import { getPaymentMethodLabel, usePaymentMethods } from '@/store/payment-methods';
-
-const PROFILE = {
-  name: 'Albert Kay',
-  email: 'albert@example.com',
-};
-
-const INITIALS = PROFILE.name
-  .split(/\s+/)
-  .slice(0, 2)
-  .map((part) => part[0])
-  .join('')
-  .toUpperCase();
 
 type ProfileRowProps = {
   icon: ComponentProps<typeof Ionicons>['name'];
@@ -107,9 +96,31 @@ function QuickLink({
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
-  const theme = useTheme();
   const { defaultMethod } = usePaymentMethods();
   const { language } = useLanguage();
+  const { user, logout } = useAuth();
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const initials = (user?.name ?? '')
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
+
+  const signOut = async () => {
+    if (isSigningOut) return;
+    setIsSigningOut(true);
+    try {
+      await logout();
+    } catch (error) {
+      Alert.alert(
+        'Signed out on this device',
+        error instanceof Error ? error.message : 'The server could not revoke this session.',
+      );
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
 
   return (
     <ThemedView className="flex-1">
@@ -133,7 +144,7 @@ export default function ProfileScreen() {
             <View className="relative mb-3">
               <View className="h-24 w-24 items-center justify-center overflow-hidden rounded-full border-4 border-background bg-brand-soft shadow-md">
                 <ThemedText className="text-[34px] font-extrabold leading-10 text-brand-ink">
-                  {INITIALS}
+                  {initials}
                 </ThemedText>
               </View>
               <Pressable
@@ -148,20 +159,19 @@ export default function ProfileScreen() {
 
             <View className="flex-row items-center gap-1.5">
               <ThemedText className="text-[24px] font-bold tracking-tight">
-                {PROFILE.name}
+                {user?.name}
               </ThemedText>
-              <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
             </View>
 
             <ThemedText themeColor="textSecondary" className="mt-0.5 text-sm">
-              {PROFILE.email}
+              {user?.email}
             </ThemedText>
 
             <View className="mt-3 flex-row items-center gap-2">
               <View className="flex-row items-center gap-1 rounded-full bg-brand-soft px-2.5 py-1">
                 <View className="h-1.5 w-1.5 rounded-full bg-brand-500" />
                 <ThemedText className="text-[10px] font-bold uppercase tracking-wider text-brand-ink">
-                  Verified Member
+                  GoShop customer
                 </ThemedText>
               </View>
               <Pressable
@@ -220,13 +230,17 @@ export default function ProfileScreen() {
 
           <Pressable
             accessibilityRole="button"
-            onPress={() => router.replace('/(onboarding)')}
+            accessibilityState={{ disabled: isSigningOut }}
+            disabled={isSigningOut}
+            onPress={signOut}
             style={({ pressed }) => (pressed ? { opacity: 0.65 } : undefined)}>
             <ThemedView
               type="backgroundElement"
               className="min-h-[58px] flex-row items-center gap-3 rounded-2xl border border-border px-5">
               <Ionicons name="log-out-outline" size={20} color="#dc2626" />
-              <ThemedText className="font-semibold text-danger">Sign out</ThemedText>
+              <ThemedText className="font-semibold text-danger">
+                {isSigningOut ? 'Signing out...' : 'Sign out'}
+              </ThemedText>
             </ThemedView>
           </Pressable>
         </ScrollView>

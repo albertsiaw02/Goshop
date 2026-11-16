@@ -3,20 +3,40 @@ import { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-
-// SVG social icons (imported as components via metro transformer)
-import GoogleLogo from '@/assets/expo.icon/google-icon-svgrepo-com.svg';
-import AppleLogo from '@/assets/expo.icon/apple-173-svgrepo-com.svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/hooks/use-theme';
+import { useAuth } from '@/store/auth';
 
 export default function LoginScreen() {
   const theme = useTheme();
+  const { initializationError, isLoading, login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const submit = async () => {
+    if (isLoading || isSubmitting) return;
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail) || !password) {
+      setErrorMessage('Enter a valid email address and password.');
+      return;
+    }
+
+    setErrorMessage(null);
+    setIsSubmitting(true);
+    try {
+      await login(normalizedEmail, password, rememberMe);
+      router.replace('/(tabs)');
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to sign in. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <View className="flex-1 bg-background">
@@ -34,6 +54,9 @@ export default function LoginScreen() {
               placeholderTextColor={theme.placeholder}
               autoCapitalize="none"
               keyboardType="email-address"
+              autoComplete="email"
+              textContentType="emailAddress"
+              editable={!isSubmitting}
               value={email}
               onChangeText={setEmail}
               className="flex-1 text-base text-content"
@@ -46,6 +69,11 @@ export default function LoginScreen() {
               placeholder="Enter Your Password"
               placeholderTextColor={theme.placeholder}
               secureTextEntry={!showPassword}
+              autoComplete="password"
+              textContentType="password"
+              returnKeyType="done"
+              onSubmitEditing={submit}
+              editable={!isSubmitting}
               value={password}
               onChangeText={setPassword}
               className="flex-1 text-base text-content"
@@ -56,45 +84,35 @@ export default function LoginScreen() {
           </View>
 
           <View className="flex-row items-center justify-between px-1">
-            <Pressable className="flex-row items-center gap-2" onPress={() => setRememberMe(!rememberMe)} hitSlop={8}>
+            <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: rememberMe }} className="flex-row items-center gap-2" onPress={() => setRememberMe(!rememberMe)} hitSlop={8}>
               <View className={`h-5 w-5 rounded border items-center justify-center ${rememberMe ? 'bg-brand-500 border-brand-500' : 'border-border'}`}>
                 {rememberMe && <Ionicons name="checkmark" size={14} color="#fff" />}
               </View>
               <Text className="text-sm text-muted">Remember me</Text>
             </Pressable>
-            <Pressable hitSlop={8}>
-              <Text className="text-sm font-semibold text-brand-ink">Forget Password?</Text>
-            </Pressable>
           </View>
 
+          {(errorMessage || initializationError) ? (
+            <Text accessibilityRole="alert" className="text-sm text-danger">
+              {errorMessage ?? initializationError}
+            </Text>
+          ) : null}
+
           <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled: isLoading || isSubmitting }}
+            disabled={isLoading || isSubmitting}
             style={({ pressed }) => (pressed ? { opacity: 0.9 } : undefined)}
-            onPress={() => router.replace('/(tabs)')}
+            onPress={submit}
             className="mt-4 overflow-hidden rounded-2xl">
             <LinearGradient colors={['#16a34a', '#15803d']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
               <View className="items-center py-4">
-                <Text className="text-[18px] font-bold text-white shadow-sm">Log In</Text>
+                <Text className="text-[18px] font-bold text-white shadow-sm">
+                  {isLoading ? 'Restoring Session...' : isSubmitting ? 'Signing In...' : 'Log In'}
+                </Text>
               </View>
             </LinearGradient>
           </Pressable>
-        </View>
-
-        <View className="mt-8 items-center">
-          <Text className="text-sm text-muted font-medium">— Or Continue With —</Text>
-          <View className="mt-5 flex-row gap-4">
-            <Pressable className="flex-row items-center justify-center flex-1 rounded-2xl bg-background border border-border py-3.5 shadow-sm">
-              <View className="mr-3" style={{ width: 20, height: 20 }}>
-                <GoogleLogo width={20} height={20} />
-              </View>
-              <Text className="font-semibold text-content">Google</Text>
-            </Pressable>
-            <Pressable className="flex-row items-center justify-center flex-1 rounded-2xl bg-background border border-border py-3.5 shadow-sm">
-              <View className="mr-3" style={{ width: 20, height: 20 }}>
-                <AppleLogo width={20} height={20} />
-              </View>
-              <Text className="font-semibold text-content">Apple</Text>
-            </Pressable>
-          </View>
         </View>
 
         <View className="mt-8 flex-row justify-center items-center">
