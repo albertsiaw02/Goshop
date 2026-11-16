@@ -350,6 +350,19 @@ errors with a request ID, but return a safe error to the client.
 | `GET /api/v1/orders/{id}` | Yes | Fetch an order owned by the caller |
 | `GET /health/live`, `/health/ready` | No/internal | Liveness and readiness probes |
 
+### Authentication payloads
+
+Registration and login accept JSON bodies containing `name`, `email`, and
+`password` (login omits `name`). On success, both return a `data` object with
+`access_token`, `refresh_token`, and `user` (`id`, `name`, and `email`).
+Refresh accepts `{ "refresh_token": "..." }` and returns the same shape with a
+rotated refresh token. Logout requires a bearer access token and accepts the
+current refresh token in its JSON body.
+
+The Expo app keeps access tokens in memory and stores refresh tokens with
+SecureStore on iOS and Android. Web sessions are memory-only. Set
+`EXPO_PUBLIC_API_URL` to the API's `/api/v1` URL before starting the app.
+
 ### Create an order
 
 The client sends product IDs and quantities, **not prices**:
@@ -543,7 +556,6 @@ data in tests.
 - Configure automated backups and point-in-time recovery; schedule restore
   drills and define recovery objectives.
 - Keep aggregate connection-pool limits within the database connection budget.
-
 Docker Compose is for local development and smoke tests, not by itself a complete
 production platform.
 
