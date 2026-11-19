@@ -1,609 +1,603 @@
-# Goshop: Go, PostgreSQL, and Docker Backend Guide
+# GoShop
 
-This guide describes how to build a Go REST API for the existing Expo / React
-Native grocery app, use PostgreSQL for persistent data, run the services locally
-with Docker Compose, and connect the app to the API.
+GoShop is a cross-platform grocery e-commerce application. It consists of an
+Expo / React Native client (iOS, Android and web) and a Go REST API backed by
+PostgreSQL. The app covers browsing a grocery catalog, cart and checkout flows,
+authentication, delivery location, payment methods, orders and account settings.
 
-> **Current state:** The app is currently a frontend prototype. Products and
-> orders are hard-coded, the cart is held in React state, login and signup only
-> navigate between screens, checkout uses fixed totals, and order IDs are
-> generated locally. Treat the backend as the source of truth as these flows are
-> implemented.
+---
 
-## Contents
+## Table of contents
 
-- [1. Architecture](#1-architecture)
-- [2. Recommended project structure](#2-recommended-project-structure)
-- [3. Technology choices](#3-technology-choices)
-- [4. Data model](#4-data-model)
-- [5. Set up Docker and PostgreSQL](#5-set-up-docker-and-postgresql)
-- [6. Build the Go API](#6-build-the-go-api)
-- [7. API contract](#7-api-contract)
-- [8. Connect the Expo app](#8-connect-the-expo-app)
-- [9. Security and payments](#9-security-and-payments)
-- [10. Testing and deployment](#10-testing-and-deployment)
-- [11. Implementation sequence](#11-implementation-sequence)
-- [12. Acceptance checklist](#12-acceptance-checklist)
+1. [System overview](#1-system-overview)
+2. [Current implementation status](#2-current-implementation-status)
+3. [Architecture](#3-architecture)
+4. [Technology stack](#4-technology-stack)
+5. [Repository structure](#5-repository-structure)
+6. [Prerequisites](#6-prerequisites)
+7. [Quick start](#7-quick-start)
+8. [Configuration](#8-configuration)
+9. [Frontend](#9-frontend)
+10. [Backend](#10-backend)
+11. [API reference](#11-api-reference)
+12. [Data model](#12-data-model)
+13. [Commands reference](#13-commands-reference)
+14. [Testing](#14-testing)
+15. [Deployment](#15-deployment)
+16. [Security](#16-security)
+17. [Known limitations and caveats](#17-known-limitations-and-caveats)
+18. [Roadmap](#18-roadmap)
+19. [License](#19-license)
 
-## 1. Architecture
+---
+
+## 1. System overview
 
 ```text
-Expo app (Android / iOS / web)
-        | HTTPS + JSON; bearer access token
-        v
-Go API (stateless HTTP service) ---- payment provider (later, tokenized)
-        |
-        | pgx connection pool; parameterized SQL
-        v
-PostgreSQL (private network; persistent volume)
+┌───────────────────────────────────────┐
+│  Expo client (iOS / Android / Web)    │
+│  - Expo Router file-based navigation  │
+│  - React Context state stores         │
+│  - Typed fetch client (api.ts)        │
+└──────────────────┬────────────────────┘
+                   │ HTTPS + JSON, Bearer access token
+                   │ EXPO_PUBLIC_API_URL → /api/v1
+                   ▼
+┌───────────────────────────────────────┐
+│  Go API (stateless HTTP service)      │
+│  - chi router + middleware            │
+│  - bcrypt passwords, JWT + refresh    │
+│  - startup SQL migrations             │
+└──────────────────┬────────────────────┘
+                   │ pgxpool, parameterized SQL
+                   ▼
+┌───────────────────────────────────────┐
+│  PostgreSQL 16 (Docker volume)        │
+│  - users, refresh_tokens              │
+└───────────────────────────────────────┘
 ```
 
-The mobile app communicates only with the API. The Go service validates
-requests, enforces business rules, and is the only service that connects to
-PostgreSQL. Never put database credentials, payment secrets, or privileged API
-keys in the Expo app.
+The client talks only to the API. The API is the only component that connects
+to PostgreSQL; no database credentials, JWT secrets or payment secrets live in
+the app bundle. The server is designed as a modular monolith and is stateless,
+so it can be scaled horizontally.
 
-Start with a **modular monolith**: one API service organized by business
-capability. Avoid microservices and a generic repository framework until there
-is a concrete need.
+---
 
-### First-release scope
+## 2. Current implementation status
 
-- Public product catalog, categories, search, and pagination.
-- Customer registration, login, profile, and session management.
-- Delivery addresses and cart/checkout validation.
-- Order creation, order history, order detail, and basic status tracking.
-- Database migrations, automated tests, structured logs, and health checks.
+| Area | Status | Notes |
+|---|---|---|
+| App shell, routing, theming, navigation | Implemented | Expo Router with typed routes, light/dark themes, native/web tab variants |
+| Login / signup screens | Implemented | Wired to the live Go auth API |
+| Auth API (register, login, refresh, logout, me) | Implemented | JWT access tokens + rotating refresh tokens |
+| Health probes | Implemented | `/health/live`, `/health/ready` |
+| Database + migrations | Implemented | PostgreSQL 16, ordered startup migration runner |
+| Docker / Compose | Implemented | Postgres + API services, multi-stage Dockerfile |
+| Product catalog | Frontend prototype | 18 hard-coded products, 7 categories in `src/data/products.ts` |
+| Cart | Frontend prototype | In-memory React state, seeded with 3 items |
+| Orders / order tracking | Frontend prototype | Hard-coded order data and locally generated order IDs |
+| Checkout / delivery | Frontend prototype | Fixed totals; real map via OpenStreetMap tiles + Nominatim + `expo-location` |
+| Payment methods | Frontend prototype | Seeded cards and mobile money (MTN, Airtel, M-Pesa, Orange) |
+| Language selection | UI only | 8-language picker; strings are not translated |
+| Catalog, addresses, orders, payments API | Not implemented | Documented in `backendimpl.md` (the original backend plan) |
 
-Defer social login, promotions, real-time driver GPS, refunds, and multi-warehouse
-inventory until the core workflow is stable.
+> `backendimpl.md` in the repository root is the original design guide and
+> implementation plan. Parts of it are now outdated (for example it describes
+> the frontend as a pure prototype, proposes `cmd/migrate` and `goose`, and
+> shows a different Compose file). This README describes the code as it exists.
 
-## 2. Recommended project structure
+---
 
-Keep the existing Expo application and add a `backend` folder:
+## 3. Architecture
+
+### Frontend layers
+
+- **Routes** (`src/app`): Expo Router file-based screens and layouts. The root
+  layout composes the providers and enforces auth-based redirects.
+- **Components** (`src/components`): reusable UI (product cards, form fields,
+  carousel, headers, settings rows, animated icon, platform-specific tabs).
+- **Stores** (`src/store`): React Context providers for auth, cart, theme,
+  language and payment methods.
+- **Services** (`src/services/api.ts`): the single typed HTTP client. It
+  requires `EXPO_PUBLIC_API_URL`, applies a 15-second timeout with
+  `AbortController`, sends bearer tokens, unwraps `{ data }` responses and
+  throws `ApiError` with the server's `{ error: { code, message } }` details.
+- **Data/constants** (`src/data`, `src/constants`): demo catalog and theme
+  tokens.
+
+### Backend layers
+
+- `cmd/api/main.go`: config loading, DB connect, migrations, HTTP server with
+  timeouts, graceful shutdown on SIGINT/SIGTERM.
+- `internal/config`: validates required environment variables.
+- `internal/database`: `pgxpool` setup (max 20 connections, startup ping) and
+  the ordered `.sql` migration runner (`schema_migrations` table).
+- `internal/httpapi`: chi router, middleware (request ID, real IP, recoverer,
+  CORS allowlist), handlers, DTOs and error mapping. 1 MB request body limit and
+  `DisallowUnknownFields`.
+- `internal/auth`: password hashing, JWT issuing/verification, refresh-token
+  creation, hashing, rotation and revocation.
+- `db/migrations`: ordered SQL schema files.
+
+### Authentication flow
+
+1. `POST /auth/register` or `/auth/login` returns an access token (HS256 JWT,
+   15-minute expiry, issuer `goshop-api`) and a refresh token (32 random bytes,
+   base64url, 30-day expiry).
+2. Access tokens are kept **in memory** in `AuthProvider`. Only the refresh
+   token is persisted — in `expo-secure-store` on iOS/Android when "remember
+   me" is selected (always for registration), and memory-only on web.
+3. On app start, a stored refresh token is exchanged for a new session.
+4. `authenticatedRequest()` retries once after a 401 by rotating the refresh
+   token. Concurrent 401s share a single in-flight refresh (single-flight).
+5. On 401/403 during refresh, local credentials are cleared. Logout revokes
+   the refresh token server-side and clears local state.
+
+Server-side, refresh tokens are stored only as SHA-256 hashes. Rotation and
+revocation happen in a transaction with a row lock (`FOR UPDATE`), preventing
+reuse of a rotated token.
+
+---
+
+## 4. Technology stack
+
+### Frontend
+
+| Concern | Choice |
+|---|---|
+| Framework | Expo SDK `~58.0.23`, React `19.3.0`, React Native `0.88.1` |
+| Routing | `expo-router` `~58.0.30` with `typedRoutes` enabled |
+| Web | `react-native-web`, static export (`web.output: "static"`) |
+| Styling | NativeWind `4.2.6` + Tailwind CSS `3.4.17`, CSS variables |
+| Animation | `react-native-reanimated`, `react-native-worklets`, `react-native-gesture-handler` |
+| UI helpers | `@expo/vector-icons`, `expo-image`, `expo-linear-gradient`, `expo-glass-effect`, `expo-symbols`, `react-native-svg` |
+| Device APIs | `expo-location`, `expo-secure-store`, `expo-linking`, `expo-web-browser`, `expo-device`, splash screen, status bar |
+| Language | TypeScript `~6.0.3`, strict mode |
+| Tooling | Babel (`babel-preset-expo`, NativeWind, worklets), Metro (SVG transformer), ESLint (`eslint-config-expo`), TypeScript path aliases `@/*` |
+
+### Backend
+
+| Concern | Choice |
+|---|---|
+| Language | Go 1.25 |
+| Module | `github.com/gocerie/goshop/backend` |
+| HTTP | `net/http` + `github.com/go-chi/chi/v5` |
+| Database | PostgreSQL 16-alpine via `github.com/jackc/pgx/v5` (`pgxpool`) |
+| Auth | `golang-jwt/jwt/v5`, `golang.org/x/crypto/bcrypt`, `crypto/sha256` |
+| Migrations | Custom ordered SQL runner run at API startup |
+| Containers | Docker multi-stage build (`golang:1.25-alpine` → `alpine:3.22`, non-root user), Docker Compose |
+
+---
+
+## 5. Repository structure
 
 ```text
 Goshop/
-├── src/                           # Existing Expo application
+├── src/
 │   ├── app/
-│   ├── components/
-│   ├── data/
-│   └── services/api.ts            # Add typed API client
+│   │   ├── _layout.tsx                 Root layout, providers, auth guard
+│   │   ├── (onboarding)/               Onboarding slides, login, signup
+│   │   ├── (tabs)/                     Home, browse, cart, orders, profile, settings
+│   │   ├── product/[id].tsx            Product detail
+│   │   ├── checkout.tsx                Checkout screen
+│   │   ├── order-tracking/[id].tsx     Order status screen
+│   │   ├── delivery.tsx                Map / delivery address
+│   │   ├── language.tsx                Language picker
+│   │   ├── notifications.tsx
+│   │   └── payment-methods/            List, add card, add mobile money, detail
+│   ├── components/                     Reusable UI components (+ .web.tsx variants)
+│   ├── constants/theme.ts              Color/spacing/font tokens
+│   ├── data/products.ts                Demo catalog (18 products, 7 categories)
+│   ├── hooks/use-theme.ts
+│   ├── services/api.ts                 Typed API client, ApiError
+│   ├── store/                          auth, cart, language, payment-methods, theme
+│   ├── global.css                      Theme CSS variables
+│   └── svg.d.ts
+├── assets/                             Logo, onboarding images, icon project
 ├── backend/
-│   ├── cmd/
-│   │   ├── api/main.go             # HTTP API entry point
-│   │   └── migrate/main.go         # Explicit migration command
+│   ├── cmd/api/main.go                 API entry point
+│   ├── db/migrations/001_auth.sql      users + refresh_tokens
 │   ├── internal/
-│   │   ├── config/                 # Environment parsing and validation
-│   │   ├── httpapi/                # Routes, middleware, handlers, DTOs
-│   │   ├── auth/                   # Password/session/token operations
-│   │   ├── catalog/                # Product and category use cases
-│   │   ├── cart/                   # Checkout validation and quote
-│   │   ├── orders/                 # Transactional order workflows
-│   │   └── database/               # Pool setup and transaction helpers
-│   ├── db/migrations/              # Ordered SQL migrations
-│   ├── sql/                        # Query source, if using sqlc
-│   ├── Dockerfile
-│   ├── compose.yaml
+│   │   ├── auth/                       auth.go, auth_test.go
+│   │   ├── config/config.go
+│   │   ├── database/                   database.go, migrations.go
+│   │   └── httpapi/                    httpapi.go, httpapi_test.go
 │   ├── .env.example
-│   └── go.mod
-└── README.md
+│   ├── compose.yaml
+│   ├── Dockerfile
+│   ├── go.mod / go.sum
+├── scripts/reset-project.js            Expo template reset helper (destructive)
+├── app.json                            Expo config
+├── package.json / pnpm-lock.yaml
+├── tsconfig.json                       strict TS, @/* aliases
+├── tailwind.config.js / babel.config.js / metro.config.js / eslint.config.js
+├── backendimpl.md                      Original backend design guide
+├── AGENTS.md / CLAUDE.md               Expo docs directive for AI agents
+└── README.md                           This file
 ```
 
-Handlers should handle HTTP concerns (decode, validate, status codes, response
-mapping). Put business rules in service/use-case functions and SQL in query
-functions or generated `sqlc` code.
+Generated / ignored directories: `node_modules/`, `.expo/`, `dist/` (static web
+export), `expo-env.d.ts`. Native `android/` and `ios/` folders are not checked
+in (Expo managed workflow).
 
-## 3. Technology choices
+---
 
-| Concern | Starting choice | Why |
-|---|---|---|
-| HTTP server | Go `net/http` with `chi` | Small router and standard request/response types |
-| PostgreSQL driver | `pgx/v5` and `pgxpool` | Native PostgreSQL support and connection pooling |
-| SQL | Explicit parameterized SQL; optionally `sqlc` | Clear queries and typed bindings without ORM magic |
-| Migrations | `goose` or `golang-migrate` | Ordered, reviewable, repeatable schema changes |
-| API | REST JSON at `/api/v1` | Straightforward to consume from Expo |
-| Configuration | Validated environment variables | Works in Compose and deployment platforms |
+## 6. Prerequisites
 
-Use `context.Context` for requests and database operations, timeouts for
-requests and queries, and a bounded database connection pool. Paginate list
-endpoints and set a maximum page size. Use UTC timestamps and RFC 3339 over the
-API.
+- **Node.js** with **pnpm** (lockfile v9).
+- **Go 1.25+** (to run the API locally without Docker).
+- **Docker** with the Compose plugin (to run PostgreSQL + API in containers).
+- **Expo CLI / Expo Go** or native simulators for mobile testing.
+- Windows PowerShell is assumed for the example commands below.
 
-## 4. Data model
+---
 
-Start with these tables. Refine fields as the product requirements are confirmed.
+## 7. Quick start
 
-| Table | Example fields and constraints |
-|---|---|
-| `users` | `id`, normalized unique `email`, `password_hash`, `name`, `created_at` |
-| `categories` | `id`, unique `slug`, `name`, `active` |
-| `products` | `id`, unique `sku`, `category_id`, `name`, `description`, `price_minor`, `currency`, `unit`, `image_url`, `active` |
-| `inventory` | `product_id`, `quantity_available`, `updated_at`; quantity must not be negative |
-| `addresses` | `id`, `user_id`, recipient and address fields; belongs to one user |
-| `orders` | `id`, public number, `user_id`, address snapshot, status, totals, currency, idempotency key, timestamp |
-| `order_items` | `order_id`, `product_id`, name/SKU snapshots, quantity, unit-price and line-total snapshots |
-| `payments` | order, provider, provider reference, status, amount, currency; no raw card data |
-| `refresh_tokens` | user, token hash, expiry and revocation timestamps |
-
-### Currency and money
-
-The demo catalog has mixed-looking prices, and some screens display a dollar
-sign. **Confirm the actual currency and product prices/units before importing
-the catalog.** Store money as an integer number of minor units plus an ISO
-currency code (for example, 250 USD cents), never as a floating-point number.
-Format amounts for display in the app.
-
-### Example catalog migration
-
-```sql
-CREATE TABLE categories (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    slug text NOT NULL UNIQUE,
-    name text NOT NULL,
-    active boolean NOT NULL DEFAULT true,
-    created_at timestamptz NOT NULL DEFAULT now()
-);
-
-CREATE TABLE products (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    sku text NOT NULL UNIQUE,
-    category_id uuid REFERENCES categories(id),
-    name text NOT NULL,
-    description text NOT NULL DEFAULT '',
-    price_minor bigint NOT NULL CHECK (price_minor >= 0),
-    currency char(3) NOT NULL,
-    unit text NOT NULL,
-    image_url text,
-    active boolean NOT NULL DEFAULT true,
-    created_at timestamptz NOT NULL DEFAULT now(),
-    updated_at timestamptz NOT NULL DEFAULT now()
-);
-
-CREATE INDEX products_active_category_idx
-    ON products (category_id, name) WHERE active = true;
-```
-
-Use a migration tool to manage files and verify that the chosen PostgreSQL
-version supports the UUID-generation function. Once a migration has been applied
-in a shared environment, make further changes with a new migration rather than
-editing history.
-
-### Order creation must be transactional
-
-1. Authenticate the customer and confirm the delivery address belongs to them.
-2. Validate the request and its idempotency key.
-3. Load current products and inventory from PostgreSQL. Ignore client-supplied
-   prices and totals.
-4. Lock inventory rows or use conditional stock updates to prevent overselling.
-5. Calculate item totals, delivery fees, taxes (if applicable), and the final
-   total using integer minor units.
-6. Insert the order and item snapshots and reserve/decrement stock in the same
-   database transaction.
-7. Commit only when all required operations succeed.
-
-If payment is external, create an explicit pending-payment state and make
-payment confirmation a separate, verified state transition.
-
-## 5. Set up Docker and PostgreSQL
-
-Create `backend/.env.example`:
-
-```dotenv
-POSTGRES_DB=goshop
-POSTGRES_USER=goshop
-POSTGRES_PASSWORD=local_only_change_me
-DATABASE_URL=postgres://goshop:local_only_change_me@db:5432/goshop?sslmode=disable
-HTTP_ADDR=:8080
-APP_ENV=development
-LOG_LEVEL=debug
-ACCESS_TOKEN_TTL=15m
-```
-
-Create `backend/compose.yaml`:
-
-```yaml
-services:
-  db:
-    image: postgres:17-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:?copy .env.example to .env}
-      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
-    ports:
-      - "127.0.0.1:5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    environment:
-      DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL}
-      HTTP_ADDR: :8080
-      APP_ENV: development
-      LOG_LEVEL: debug
-    ports:
-      - "127.0.0.1:8080:8080"
-    depends_on:
-      db:
-        condition: service_healthy
-
-volumes:
-  postgres_data:
-```
-
-The PostgreSQL image tag above is an example. Choose a supported version, and
-pin an image digest for production. The sample password is for local development
-only. Commit `.env.example`, but add `.env` to `.gitignore`.
-
-### Run the database (Windows PowerShell)
+### 7.1 Start the backend
 
 ```powershell
 cd backend
-Copy-Item .env.example .env
-# Edit .env and use a local-only password. Never commit .env.
-docker compose up -d db
+Copy-Item .env.example .env      # then edit JWT_SECRET (min 32 chars)
+docker compose up --build -d     # starts postgres + api
 docker compose ps
-```
-
-After you have implemented the migration command and API image:
-
-```powershell
-docker compose run --rm --entrypoint /app/migrate api up
-docker compose up --build -d api
 docker compose logs -f api
 curl.exe http://localhost:8080/health/live
 curl.exe http://localhost:8080/health/ready
 ```
 
-`docker compose down` stops containers but preserves the named data volume.
-`docker compose down -v` **permanently deletes** the local database volume; use
-it only when that data can be discarded.
+Migrations run automatically when the API starts. Data persists in the
+`goshop_postgres` named volume. `docker compose down` keeps the volume;
+`docker compose down -v` deletes it permanently.
 
-For production, run migrations as an explicit one-shot release job before
-traffic is sent to the new API. Do not have every API replica run migrations at
-startup.
-
-## 6. Build the Go API
-
-From `backend/`, initialize the module and add the initial dependencies:
+To run the API directly instead (PostgreSQL must already be reachable):
 
 ```powershell
-go mod init example.com/goshop/backend
-go get github.com/go-chi/chi/v5
-go get github.com/jackc/pgx/v5
-go get github.com/pressly/goose/v3
-go mod tidy
+cd backend
+$env:DATABASE_URL = "postgres://goshop:goshop@localhost:5432/goshop?sslmode=disable"
+$env:JWT_SECRET   = "replace-with-at-least-32-random-characters"
+go run ./cmd/api
 ```
 
-Replace the example module path if the backend will be published or imported
-elsewhere. Pin the Go version and tool versions used by the team.
+### 7.2 Start the frontend
 
-### Startup responsibilities
-
-1. Parse and validate required environment variables; fail fast if configuration
-   is missing or invalid.
-2. Create a `pgxpool` with connection limits and lifetime settings, then ping the
-   database with a startup timeout.
-3. Register routes and middleware, including request IDs, recovery, and access
-   logging that avoids sensitive data.
-4. Add `/health/live` and `/health/ready` probes.
-5. Configure HTTP read, write, idle, and header timeouts.
-6. On SIGINT/SIGTERM, drain in-flight requests and close the database pool.
-
-### Example routes
-
-```go
-r := chi.NewRouter()
-r.Use(middleware.RequestID)
-r.Use(middleware.RealIP)
-r.Use(middleware.Recoverer)
-
-r.Get("/health/live", liveHandler)
-r.Get("/health/ready", readyHandler)
-
-r.Route("/api/v1", func(r chi.Router) {
-    r.Get("/categories", listCategoriesHandler)
-    r.Get("/products", listProductsHandler)
-    r.Get("/products/{id}", getProductHandler)
-    r.Post("/auth/register", registerHandler)
-    r.Post("/auth/login", loginHandler)
-
-    r.Group(func(r chi.Router) {
-        r.Use(requireAccessToken)
-        r.Get("/me", getMeHandler)
-        r.Get("/orders", listOrdersHandler)
-        r.Post("/orders", createOrderHandler)
-        r.Get("/orders/{id}", getOrderHandler)
-    })
-})
-```
-
-Pass request contexts to every database call. Use SQL parameters (`$1`, `$2`)
-instead of concatenating user input. Close query rows and check `rows.Err()`.
-Rollback failed transactions and commit exactly once. Log internal database
-errors with a request ID, but return a safe error to the client.
-
-## 7. API contract
-
-| Method and path | Authentication | Purpose |
-|---|---|---|
-| `GET /api/v1/categories` | No | List active categories |
-| `GET /api/v1/products?category=&q=&cursor=&limit=` | No | Search, filter, and paginate products |
-| `GET /api/v1/products/{id}` | No | Product details |
-| `POST /api/v1/auth/register` | No | Create an account |
-| `POST /api/v1/auth/login` | No | Start a session |
-| `POST /api/v1/auth/refresh` | Refresh credential | Rotate refresh token and issue an access token |
-| `POST /api/v1/auth/logout` | Yes | Revoke the current refresh session |
-| `GET /api/v1/me` | Yes | Get the signed-in customer |
-| `GET/POST /api/v1/addresses` | Yes | List or add owned addresses |
-| `GET/POST /api/v1/orders` | Yes | List orders or create an order |
-| `GET /api/v1/orders/{id}` | Yes | Fetch an order owned by the caller |
-| `GET /health/live`, `/health/ready` | No/internal | Liveness and readiness probes |
-
-### Authentication payloads
-
-Registration and login accept JSON bodies containing `name`, `email`, and
-`password` (login omits `name`). On success, both return a `data` object with
-`access_token`, `refresh_token`, and `user` (`id`, `name`, and `email`).
-Refresh accepts `{ "refresh_token": "..." }` and returns the same shape with a
-rotated refresh token. Logout requires a bearer access token and accepts the
-current refresh token in its JSON body.
-
-The Expo app keeps access tokens in memory and stores refresh tokens with
-SecureStore on iOS and Android. Web sessions are memory-only. Set
-`EXPO_PUBLIC_API_URL` to the API's `/api/v1` URL before starting the app.
-
-### Create an order
-
-The client sends product IDs and quantities, **not prices**:
-
-```http
-POST /api/v1/orders
-Authorization: Bearer <access-token>
-Idempotency-Key: 3e3a8b30-5f74-4dcb-b627-2d790d3e745a
-Content-Type: application/json
-```
-
-```json
-{
-  "address_id": "d56b44fe-014d-45a1-b14a-68cce69a58e0",
-  "items": [
-    { "product_id": "beea5fe1-6930-4c64-b239-e683eb365101", "quantity": 2 },
-    { "product_id": "64965bd9-ddb0-47ed-a8a0-7050f1a17375", "quantity": 1 }
-  ]
-}
-```
-
-The server loads current prices, availability, fees, and currency. Store a
-user-scoped idempotency key so a retry after a timeout cannot create a duplicate
-order.
-
-### Response conventions
-
-Use stable JSON fields, explicit currency, and UTC timestamps:
-
-```json
-{
-  "data": {
-    "id": "order_uuid",
-    "number": "ORD-2026-001042",
-    "status": "pending_payment",
-    "currency": "USD",
-    "subtotal_minor": 2450,
-    "delivery_minor": 250,
-    "total_minor": 2700,
-    "created_at": "2026-11-15T04:00:00Z"
-  }
-}
-```
-
-Use a consistent error format:
-
-```json
-{
-  "error": {
-    "code": "out_of_stock",
-    "message": "One or more items are no longer available.",
-    "request_id": "req_..."
-  }
-}
-```
-
-Suggested status codes: `200`/`201` success, `400` malformed request,
-`401` unauthenticated, `403` forbidden, `404` not found/not visible,
-`409` conflict such as insufficient stock, `429` rate limited, `500` unexpected
-server error, and `503` temporarily unavailable. Choose a consistent validation
-status convention and apply it throughout. Scope all customer-owned queries to
-the authenticated user.
-
-## 8. Connect the Expo app
-
-### Development API URL
-
-| Where the app runs | Example URL |
-|---|---|
-| Web on the same computer | `http://localhost:8080` |
-| iOS simulator | `http://localhost:8080` |
-| Android emulator | `http://10.0.2.2:8080` |
-| Physical phone | `http://<computer-LAN-IP>:8080` |
-| Production | `https://api.your-domain.example` |
-
-`localhost` inside a container refers to that container, not the host. A phone
-must share the network with the computer, and the development firewall must
-allow access. Production must use HTTPS. Never expose the database port publicly.
-
-Configure Expo's public API URL in a development environment file:
-
-```dotenv
-EXPO_PUBLIC_API_URL=http://10.0.2.2:8080/api/v1
-```
-
-`EXPO_PUBLIC_*` values are included in the app bundle, so they are not secrets.
-
-Add a shared typed API helper at `src/services/api.ts`. It should:
-
-- Require the API URL instead of silently falling back to mock data.
-- Set JSON headers and attach the access token when needed.
-- Parse the stable API error response and expose useful, safe errors to screens.
-- Support cancellation/timeouts and coordinate token refresh.
-
-### Integrate screens in this order
-
-1. Replace runtime use of the hard-coded `PRODUCTS` in `src/data/products.ts`
-   with `GET /products` and `GET /products/{id}`.
-2. Remove seeded cart data from `src/store/cart.tsx`. Keep a guest cart locally
-   if desired, but send product IDs and quantities for checkout.
-3. Wire `src/app/(onboarding)/login.tsx` and `signup.tsx` to the auth endpoints.
-   Store refresh credentials using platform secure storage (for example,
-   Expo SecureStore where supported), not ordinary AsyncStorage.
-4. Update `src/app/checkout.tsx` to submit the address ID and cart lines and
-   display the totals returned by the server.
-5. Replace the random order ID created in checkout with the returned server order
-   ID.
-6. Replace static data in `src/app/(tabs)/orders.tsx` with `GET /orders`.
-7. Update `src/app/order-tracking/[id].tsx` to fetch `GET /orders/{id}`.
-8. Add loading, empty, offline, unauthorized, and retry states. Do not silently
-   show demo data when a request fails.
-
-Keep UI components independent of transport details. The app should display
-server-calculated prices and real order status.
-
-## 9. Security and payments
-
-- Require HTTPS in production.
-- Hash passwords with a reviewed, maintained algorithm such as Argon2id or
-  bcrypt using appropriate parameters. Never store plaintext passwords.
-- Use short-lived access tokens and rotating refresh tokens. Store only a hash
-  of refresh tokens server-side; revoke them on logout and password change.
-- Rate limit login, registration, and refresh endpoints.
-- Validate request size and fields; enforce authentication and per-user
-  authorization on every private operation.
-- Use least-privilege database roles, private networking, parameterized SQL, and
-  secrets management. Never commit `.env` or log credentials and tokens.
-- Do not reveal whether another customer's account or order exists.
-- Treat CORS as a browser policy, not as authentication.
-- Collect only the personal data needed and define retention/deletion rules.
-
-### Payments
-
-Do not collect or store full card numbers or CVV in the app's API or database.
-Use a payment provider's tokenized SDK or hosted flow and persist only provider
-references and payment status. Verify signed webhooks, reject replayed event
-IDs, and make payment transitions idempotent. Do not mark an order paid based
-only on a client callback.
-
-Confirm the required payment methods and provider before implementing payment
-collection.
-
-## 10. Testing and deployment
-
-### Tests to add
-
-- Unit tests for pricing, validation, token expiry, and order state transitions.
-- PostgreSQL integration tests for SQL, constraints, transactions, and migrations.
-- HTTP tests for response shapes, status codes, authentication, and ownership.
-- Mobile tests for API services and loading/error/success states.
-- End-to-end test: register → browse → checkout → order detail.
-- Operational checks for health probes, shutdown, connection failures, and
-  database restore procedures.
-
-At minimum, test that:
-
-- A customer cannot view another customer's address or order.
-- Order totals are calculated from server-side prices, not submitted values.
-- A repeated idempotency key does not create a duplicate order.
-- Concurrent checkouts cannot sell more stock than is available.
-- Failed checkout writes roll back completely.
-- Inactive products and invalid quantities cannot be ordered.
-- Passwords and tokens never appear in responses or logs.
-- Migrations work on a clean database and from the previous release schema.
-
-### Local Go checks
-
-From `backend/`:
+From the repository root, set the API URL for your target platform, then start
+Expo:
 
 ```powershell
-go test ./...
-go vet ./...
-go build ./cmd/api ./cmd/migrate
-```
-
-Run `gofmt` on Go files before committing. CI should run tests, static checks,
-and container builds against a disposable test database. Never use production
-data in tests.
-
-### Production baseline
-
-- Run stateless API containers behind HTTPS ingress.
-- Prefer managed PostgreSQL for an initial deployment; keep it private and
-  enable encryption, backups, and monitoring.
-- Inject secrets from the platform secret manager; use separate credentials
-  per environment.
-- Run migrations as a reviewed release job and use backward-compatible
-  expand/contract schema changes.
-- Add structured logs with request IDs, safe metrics, readiness probes, alerts,
-  and graceful shutdown.
-- Configure automated backups and point-in-time recovery; schedule restore
-  drills and define recovery objectives.
-- Keep aggregate connection-pool limits within the database connection budget.
-Docker Compose is for local development and smoke tests, not by itself a complete
-production platform.
-
-## 11. Implementation sequence
-
-| Phase | Deliverable | Completion check |
-|---|---|---|
-| 0. Decisions | Confirm currency, prices/units, delivery pricing, auth policy, first payment method, and deployment target | Decisions recorded; demo catalog reconciled |
-| 1. Skeleton | Go module, configuration, router, health endpoints | Go build/tests pass; liveness returns 200 |
-| 2. Database | Compose PostgreSQL, connection pool, migrations, catalog seed data | Clean database migrates; data persists on restart |
-| 3. Catalog | Category/product queries and read endpoints | API response verified and rendered in browse screen |
-| 4. Accounts | Registration, login, profile, refresh, logout, ownership checks | Auth and access-control tests pass |
-| 5. Checkout | Server pricing, inventory transaction, idempotent order creation | Retry and concurrent-stock tests pass |
-| 6. Orders | Order history/detail/status and mobile error states | Static order data removed |
-| 7. Payments | Provider sandbox, token/reference flow, verified webhooks | Success, failure, and replay tests pass |
-| 8. Release | CI, staging, secrets, backups, alerts, runbook | Smoke test and restore/rollback review complete |
-
-**Recommended first milestone:** Confirm the real currency and prices, start
-PostgreSQL with Compose, create the catalog migration and seed data, implement
-`GET /api/v1/products`, verify it with `curl.exe`, and render its response on
-the browse screen. This small end-to-end slice validates networking and
-configuration before the larger authentication and checkout work.
-
-## 12. Acceptance checklist
-
-- [ ] A clean checkout can start PostgreSQL and the API using documented steps.
-- [ ] PostgreSQL reports healthy and data survives container restart.
-- [ ] Migrations are repeatable and do not rely on every API replica running them.
-- [ ] Catalog, account, address, and order data have appropriate constraints and
-  ownership rules.
-- [ ] Checkout is server-priced, transactional, concurrency-safe, and idempotent.
-- [ ] The API contract defines auth, pagination, errors, and status codes.
-- [ ] The Expo app uses a configurable API URL and contains no backend secrets.
-- [ ] Tests cover authorization, stock races, retries, migrations, and key flows.
-- [ ] CI runs checks and builds the API/container.
-- [ ] Logs, health probes, secrets, and database backups are configured for the
-  deployment environment.
-- [ ] No raw payment card number or CVV is stored by the application.
-
-## Existing Expo app resources
-
-The frontend is an Expo Router project. Install dependencies and start it with:
-
-```powershell
+$env:EXPO_PUBLIC_API_URL = "http://localhost:8080/api/v1"   # web / iOS simulator
 pnpm install
 pnpm start
 ```
 
-Use the Expo CLI prompts to open a development build, emulator, or web client.
-The backend steps in this README are a plan; the backend files and API described
-above still need to be implemented.
+Use `pnpm web`, `pnpm android` or `pnpm ios` for a specific platform. The value
+of `EXPO_PUBLIC_API_URL` is embedded in the bundle on each rebuild — it must be
+set in the environment that performs the build/export.
+
+---
+
+## 8. Configuration
+
+### Backend (`backend/.env`, copy from `backend/.env.example`)
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `DATABASE_URL` | Yes | — | PostgreSQL connection string, e.g. `postgres://goshop:goshop@localhost:5432/goshop?sslmode=disable` |
+| `JWT_SECRET` | Yes | — | Secret for signing JWTs; must be ≥ 32 characters |
+| `HTTP_ADDR` | No | `:8080` | Address the HTTP server listens on |
+| `ALLOWED_ORIGINS` | No | empty | Comma-separated CORS allowlist, e.g. `http://localhost:8081,http://localhost:19006`; `*` allows any origin |
+| `MIGRATIONS_DIR` | No | `./db/migrations` | Directory of ordered `.sql` migrations (Compose sets `/migrations`) |
+
+The Compose file currently hardcodes local DB credentials (`goshop` / `goshop`)
+and a placeholder `JWT_SECRET` — change these before any non-local use.
+
+### Frontend
+
+| Variable | Required | Description |
+|---|---|---|
+| `EXPO_PUBLIC_API_URL` | Yes | Absolute `http:`/`https:` URL of the API, including the `/api/v1` prefix, e.g. `http://10.0.2.2:8080/api/v1` |
+
+Useful values by platform:
+
+| Where the app runs | Example URL |
+|---|---|
+| Web on the same machine / iOS simulator | `http://localhost:8080/api/v1` |
+| Android emulator | `http://10.0.2.2:8080/api/v1` |
+| Physical device on the same network | `http://<computer-LAN-IP>:8080/api/v1` |
+| Production | `https://api.<domain>/api/v1` |
+
+`localhost` inside a container refers to that container, not the host. Physical
+devices must share the network with the computer and the firewall must allow
+access. `EXPO_PUBLIC_*` values are public in the bundle — never put secrets in
+them. No `.env` file is committed; `.env*.local` is gitignored.
+
+External services used without API keys: Unsplash images (promotion carousel),
+OpenStreetMap tiles and Nominatim geocoding (delivery screen).
+
+---
+
+## 9. Frontend
+
+### Routes and screens
+
+| Route | Purpose |
+|---|---|
+| `/(onboarding)` | 3-slide swipe onboarding |
+| `/(onboarding)/login`, `/signup` | Authentication against the Go API |
+| `/(tabs)` | Home: search, categories, promo carousel, stores, featured products |
+| `/(tabs)/browse` | Category-filtered product grid |
+| `/(tabs)/cart` | Cart contents and totals |
+| `/(tabs)/orders` | Order history (currently static) |
+| `/(tabs)/profile` | User profile, logout |
+| `/(tabs)/settings` | Personal / Security / Appearance tabs, deep-linkable via `?tab=` |
+| `/product/[id]` | Product detail |
+| `/checkout` | Checkout (authenticated) |
+| `/order-tracking/[id]` | Order tracking (authenticated) |
+| `/delivery` | Map and delivery-address selection |
+| `/language` | Language picker (8 languages) |
+| `/notifications` | Notifications |
+| `/payment-methods` | List, add card, add mobile money, detail |
+
+The root layout's auth guard redirects unauthenticated users away from
+`(tabs)/orders`, `(tabs)/profile`, `checkout`, `delivery`, `payment-methods` and
+`order-tracking` to `/login`, and redirects authenticated users away from
+onboarding to `/(tabs)`.
+
+### State stores
+
+- **auth** (`auth.tsx`): session, login, register, logout, token refresh,
+  `authenticatedRequest`.
+- **cart** (`cart.tsx`): in-memory cart seeded with demo items.
+- **theme** (`theme.tsx`): system/light/dark; adds/removes the `dark` class on
+  web and syncs with the system theme.
+- **language** (`language.tsx`): selection among English, French, Spanish,
+  German, Portuguese, Arabic, Swahili and Chinese (UI only).
+- **payment-methods** (`payment-methods.tsx`): seeded cards and mobile-money
+  accounts.
+
+### Platform notes
+
+- Tabs use native `NativeTabs` with SF Symbols on iOS/Android and
+  `expo-router/ui` tabs with emoji on web (`.web.tsx` variants).
+- Animations use Reanimated 4 with worklets; SVG imports are transformed into
+  React components via Metro.
+- Web is configured for static output; a prior export lives in `dist/`.
+- `app.json` enables `typedRoutes` and `reactCompiler` experiments, deep links
+  via the `goshop://` scheme, and a green splash screen.
+
+---
+
+## 10. Backend
+
+### Server behavior
+
+- Validates `DATABASE_URL` and `JWT_SECRET` at startup (fails fast).
+- Creates a bounded `pgxpool` (max 20 connections) and pings the database.
+- Applies all pending `.sql` migrations from `MIGRATIONS_DIR` in sorted order,
+  tracked in a `schema_migrations` table and applied in transactions.
+- Uses chi middleware: `RequestID`, `RealIP`, `Recoverer`, custom CORS.
+- Enforces HTTP timeouts: 10s read, 5s read-header, 15s write, 60s idle.
+- Gracefully shuts down on SIGINT/SIGTERM with a 10-second drain window.
+
+### Auth implementation details
+
+- Passwords: bcrypt at default cost, minimum 8 characters; emails lowercased
+  and trimmed; unique constraint enforced in the database.
+- Access token: HS256 JWT, `sub` = user UUID, 15-minute expiry, issuer
+  `goshop-api`; verified with method + issuer checks.
+- Refresh token: 32 random bytes (base64url); only its SHA-256 hash is stored.
+  30-day expiry, rotated transactionally with row locking, revoked on logout.
+- Error mapping: `invalid_credentials` (401), `email_taken` (409),
+  `invalid_refresh_token` (401), `user_not_found` (404), otherwise
+  `internal_error` (500).
+
+---
+
+## 11. API reference
+
+Base URL: `<EXPO_PUBLIC_API_URL>` (locally `http://localhost:8080/api/v1`).
+Health probes are served at the root of the host (not under `/api/v1`).
+
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| `GET` | `/health/live` | No | Liveness probe → `{ "status": "ok" }` |
+| `GET` | `/health/ready` | No | Readiness probe → `{ "status": "ready" }` |
+| `POST` | `/api/v1/auth/register` | No | Create account, returns session |
+| `POST` | `/api/v1/auth/login` | No | Start session, returns session |
+| `POST` | `/api/v1/auth/refresh` | Refresh token in body | Rotate refresh token, returns new session |
+| `POST` | `/api/v1/auth/logout` | Bearer access token | Revoke refresh token |
+| `GET` | `/api/v1/me` | Bearer access token | Get signed-in user |
+
+Successful JSON responses are wrapped as `{ "data": ... }`. `204` responses
+have no body. Errors use:
+
+```json
+{ "error": { "code": "invalid_credentials", "message": "Email or password is incorrect." } }
+```
+
+### Register
+
+```json
+{ "name": "Ada", "email": "ada@example.com", "password": "secret123" }
+```
+
+### Login
+
+```json
+{ "email": "ada@example.com", "password": "secret123" }
+```
+
+### Refresh / Logout body
+
+```json
+{ "refresh_token": "<refresh-token>" }
+```
+
+### Session / user shape
+
+```json
+{
+  "data": {
+    "access_token": "<jwt>",
+    "refresh_token": "<token>",
+    "user": { "id": "<uuid>", "name": "Ada", "email": "ada@example.com" }
+  }
+}
+```
+
+### Example with curl
+
+```powershell
+curl.exe -X POST http://localhost:8080/api/v1/auth/login `
+  -H "Content-Type: application/json" `
+  -d '{"email":"ada@example.com","password":"secret123"}'
+```
+
+The design guide (`backendimpl.md`) additionally specifies future endpoints for
+categories, products, addresses and orders; these are **not implemented** in
+the current API.
+
+---
+
+## 12. Data model
+
+Current schema (`backend/db/migrations/001_auth.sql`):
+
+| Table | Columns / constraints |
+|---|---|
+| `users` | `id uuid PK` (default `gen_random_uuid()`), `email text NOT NULL UNIQUE` (normalized), `name text NOT NULL`, `password_hash text NOT NULL`, `created_at timestamptz` |
+| `refresh_tokens` | `id uuid PK`, `user_id uuid FK → users ON DELETE CASCADE`, `token_hash text UNIQUE`, `expires_at timestamptz`, `revoked_at timestamptz NULL`, `created_at timestamptz`; index on `user_id` |
+
+Requires the `pgcrypto` extension for `gen_random_uuid()`.
+
+The planned full model (in `backendimpl.md`) adds `categories`, `products`,
+`inventory`, `addresses`, `orders`, `order_items` and `payments`. That guide
+recommends storing money as integer minor units plus an ISO currency code. The
+demo catalog uses mixed price scales (e.g. apples `75` vs milk `1.5`) and the
+currency has not been confirmed — resolve this before importing catalog data
+into a database.
+
+---
+
+## 13. Commands reference
+
+### Frontend (repository root, pnpm)
+
+| Command | Description |
+|---|---|
+| `pnpm install` | Install dependencies |
+| `pnpm start` | Start Expo dev server |
+| `pnpm web` | Start on web |
+| `pnpm android` | Start on Android |
+| `pnpm ios` | Start on iOS |
+| `pnpm lint` | Run ESLint via `expo lint` |
+| `pnpm reset-project` | Destructive: resets Expo template (`src/` + `scripts/`) |
+| `npx expo export --platform web` | Produce a static web build in `dist/` (no npm script defined) |
+
+### Backend (`backend/`, Go / Docker)
+
+| Command | Description |
+|---|---|
+| `docker compose up --build -d` | Build and start PostgreSQL + API |
+| `docker compose up -d postgres` | Start only the database |
+| `docker compose logs -f api` | Follow API logs |
+| `docker compose down` | Stop containers, keep the data volume |
+| `docker compose down -v` | Stop containers and delete the database volume |
+| `go run ./cmd/api` | Run API locally (needs DB + env vars) |
+| `go build ./cmd/api` | Build API binary |
+| `go test ./...` | Run Go tests |
+| `go vet ./...` | Static analysis |
+| `gofmt -w .` | Format Go code |
+
+---
+
+## 14. Testing
+
+- Backend tests currently present: `internal/auth/auth_test.go` (password and
+  refresh-token hashing) and `internal/httpapi/httpapi_test.go` (CORS origin
+  allowlist). Run with `go test ./...`.
+- No frontend test framework, typecheck script or CI pipeline is configured.
+  Available frontend checks are `pnpm lint` and TypeScript strict mode.
+- Suggested coverage as the system grows (from the design guide): pricing and
+  order-state unit tests, PostgreSQL integration tests, HTTP auth/ownership
+  tests, API-service and loading/error-state client tests, an end-to-end
+  register → browse → checkout → order-detail flow, and checks for stock races,
+  idempotency, migration repeatability and health probes.
+
+---
+
+## 15. Deployment
+
+- Web is configured for **static export** (`app.json` → `web.output: "static"`);
+  serve the generated `dist/` from any static host/CDN.
+- The API container is a multi-stage, non-root image exposing port 8080 and
+  expects `DATABASE_URL`, `JWT_SECRET`, `HTTP_ADDR`, `ALLOWED_ORIGINS` and
+  `MIGRATIONS_DIR` from the environment.
+- Before production: replace hardcoded Compose credentials and placeholder JWT
+  secret, inject secrets from a secret manager, require HTTPS, run migrations as
+  a controlled release step, use private/managed PostgreSQL with backups, add
+  structured logging/metrics/alerts, and keep aggregate connection-pool limits
+  within the database budget.
+- No `eas.json`, CI workflow or production deployment configuration exists yet.
+
+---
+
+## 16. Security
+
+- No database credentials or JWT secrets are shipped in the app; only the
+  public API URL is embedded.
+- Passwords are bcrypt-hashed; only SHA-256 hashes of refresh tokens are stored.
+- Access tokens are short-lived (15 minutes) and held in memory; refresh tokens
+  rotate on use and are revoked on logout.
+- CORS uses an explicit `ALLOWED_ORIGINS` allowlist (or `*`); it is a browser
+  policy, not authentication.
+- Requests are limited to 1 MB and unknown JSON fields are rejected.
+- Private endpoints verify the bearer token and scope operations to the
+  authenticated user.
+- For payments (when implemented), use tokenized provider flows — never store
+  raw card numbers or CVV — verify signed webhooks and make payment transitions
+  idempotent.
+
+---
+
+## 17. Known limitations and caveats
+
+- The installed Expo SDK is 58.x, while `AGENTS.md` / `CLAUDE.md` instruct AI
+  agents to read the v57 docs. Verify the correct docs version when editing.
+- `backendimpl.md` is an outdated implementation plan; `cmd/migrate` and the
+  migrations tool it mentions do not exist. Migrations run at API startup.
+- Catalog, cart, orders, addresses and payments are still demo/prototype data
+  on the client; no corresponding API endpoints exist.
+- `src/app/settings/` is an empty leftover directory.
+- `eslint-config-expo` is used by `eslint.config.js` but is not declared
+  directly in `devDependencies`.
+- Demo product prices use mixed scales/currencies; confirm the real currency,
+  prices and units before importing to a database.
+- The language picker does not translate strings; notifications and settings
+  flows are UI-only.
+- `expo-env.d.ts` is gitignored yet present; `.expo/` and `dist/` are generated
+  artifacts.
+
+---
+
+## 18. Roadmap
+
+| Phase | Deliverable |
+|---|---|
+| 0. Decisions | Confirm currency, prices/units, delivery pricing, auth policy, first payment method and deployment target |
+| 1. Catalog API | `GET /categories`, `GET /products`, `GET /products/{id}`; replace `src/data/products.ts` at runtime |
+| 2. Cart & checkout | Server-side pricing, inventory transaction, idempotent order creation using integer minor units |
+| 3. Orders | Replace static orders/tracking with `GET /orders`, `GET /orders/{id}` and real statuses |
+| 4. Addresses | CRUD for user-owned delivery addresses; wire the delivery screen |
+| 5. Payments | Provider sandbox, tokenized flow, verified webhooks, payment status |
+| 6. Release | CI, frontend tests/typecheck, staging, secrets, backups, alerts, runbook |
+
+See `backendimpl.md` for the original detailed design, API contract and
+acceptance checklist.
+
+---
+
+## 19. License
+
+See [LICENSE](LICENSE).
