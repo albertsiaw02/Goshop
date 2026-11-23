@@ -3,6 +3,8 @@ package httpapi
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"log"
 	"net/http"
 	"strings"
 
@@ -23,10 +25,10 @@ type Server struct {
 	allowed []string
 }
 
-func New(db *pgxpool.Pool, jwtSecret []byte, allowedOrigins []string) *Server {
+func New(db *pgxpool.Pool, jwtSecret []byte, allowedOrigins []string, smtpConfig auth.SMTPConfig) *Server {
 	s := &Server{
 		router:  chi.NewRouter(),
-		auth:    auth.NewService(db, jwtSecret),
+		auth:    auth.NewService(db, jwtSecret, smtpConfig),
 		allowed: allowedOrigins,
 	}
 	s.routes()
@@ -54,11 +56,14 @@ func (s *Server) routes() {
 		r.Post("/auth/register", s.register)
 		r.Post("/auth/login", s.login)
 		r.Post("/auth/refresh", s.refresh)
+		r.Post("/auth/password-reset/request", s.requestPasswordReset)
+		r.Post("/auth/password-reset/confirm", s.resetPassword)
 
 		r.Group(func(r chi.Router) {
 			r.Use(s.requireAccessToken)
 			r.Post("/auth/logout", s.logout)
 			r.Get("/me", s.me)
+			r.Delete("/me", s.deleteAccount)
 		})
 	})
 }
@@ -76,6 +81,19 @@ type loginRequest struct {
 
 type refreshRequest struct {
 	RefreshToken string `json:"refresh_token"`
+}
+
+type passwordResetRequest struct {
+	Email string `json:"email"`
+}
+
+type passwordResetConfirmRequest struct {
+	Token    string `json:"token"`
+	Password string `json:"password"`
+}
+
+type deleteAccountRequest struct {
+	Password string `json:"password"`
 }
 
 func (s *Server) register(w http.ResponseWriter, r *http.Request) {
@@ -138,6 +156,50 @@ func (s *Server) me(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"data": user})
+}
+
+func (s *Server) requestPasswordReset(w http.ResponseWriter, r *http.Request) {
+	var req passwordResetRequest
+	if !decodeJSON(w, r, &req) {
+		return
+	}
+	err := s.auth.RequestPasswordReset(r.Context(), req.Email)
+	if errors.Is(err, auth.ErrResetEmailDelivery) {
+		log.Printf("password reset email delivery failed: %v", err)
+	} else if err != nil {
+		writeAuthError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusAccepted, map[string]any{
+		"data": map[string]string{
+			"message": "If the email is associated with an account, password reset instructions will be sent.",
+		},
+	})
+}
+
+func (s *Server) resetPassword(w http.ResponseWriter, r *http.Request) {
+	var req passwordResetConfirmRequest
+	if !decodeJSON(w, r, &req) {
+		return
+	}
+	if err := s.auth.ResetPassword(r.Context(), req.Token, req.Password); err != nil {
+		writeAuthError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"data": map[string]bool{"password_reset": true}})
+}
+
+func (s *Server) deleteAccount(w http.ResponseWriter, r *http.Request) {
+	var req deleteAccountRequest
+	if !decodeJSON(w, r, &req) {
+		return
+	}
+	userID, _ := r.Context().Value(userIDKey).(string)
+	if err := s.auth.DeleteAccount(r.Context(), userID, req.Password); err != nil {
+		writeAuthError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"data": map[string]bool{"account_deleted": true}})
 }
 
 func (s *Server) requireAccessToken(next http.Handler) http.Handler {
@@ -208,6 +270,14 @@ func writeAuthError(w http.ResponseWriter, err error) {
 		writeError(w, http.StatusUnauthorized, "invalid_refresh_token", "The session has expired. Please sign in again.")
 	case auth.ErrUserNotFound:
 		writeError(w, http.StatusNotFound, "user_not_found", "User not found.")
+	case auth.ErrInvalidPassword:
+		writeError(w, http.StatusBadRequest, "invalid_password", "Password must be between 8 and 72 bytes.")
+	case auth.ErrIncorrectPassword:
+		writeError(w, http.StatusUnauthorized, "incorrect_password", "The current password is incorrect.")
+	case auth.ErrPasswordResetToken:
+		writeError(w, http.StatusBadRequest, "invalid_password_reset_token", "The password reset link is invalid or expired.")
+	case auth.ErrResetEmailDisabled:
+		writeError(w, http.StatusServiceUnavailable, "password_reset_unavailable", "Password reset email is not configured.")
 	default:
 		writeInternalError(w)
 	}

@@ -22,7 +22,21 @@ var (
 	ErrEmailTaken         = errors.New("email_taken")
 	ErrRefreshToken       = errors.New("invalid_refresh_token")
 	ErrUserNotFound       = errors.New("user_not_found")
+	ErrInvalidPassword    = errors.New("invalid_password")
+	ErrIncorrectPassword  = errors.New("incorrect_password")
+	ErrPasswordResetToken = errors.New("invalid_password_reset_token")
+	ErrResetEmailDisabled = errors.New("password_reset_email_not_configured")
+	ErrResetEmailDelivery = errors.New("password_reset_email_delivery_failed")
 )
+
+type SMTPConfig struct {
+	Host     string
+	Port     string
+	Username string
+	Password string
+	From     string
+	ResetURL string
+}
 
 type User struct {
 	ID    string `json:"id"`
@@ -37,12 +51,13 @@ type Session struct {
 }
 
 type Service struct {
-	db        *pgxpool.Pool
-	jwtSecret []byte
+	db         *pgxpool.Pool
+	jwtSecret  []byte
+	smtpConfig SMTPConfig
 }
 
-func NewService(db *pgxpool.Pool, jwtSecret []byte) *Service {
-	return &Service{db: db, jwtSecret: jwtSecret}
+func NewService(db *pgxpool.Pool, jwtSecret []byte, smtpConfig SMTPConfig) *Service {
+	return &Service{db: db, jwtSecret: jwtSecret, smtpConfig: smtpConfig}
 }
 
 func normalizeEmail(email string) string {
@@ -52,7 +67,7 @@ func normalizeEmail(email string) string {
 func (s *Service) Register(ctx context.Context, name, email, password string) (Session, error) {
 	name = strings.TrimSpace(name)
 	email = normalizeEmail(email)
-	if name == "" || email == "" || len(password) < 8 {
+	if name == "" || email == "" || len(password) < 8 || len(password) > 72 {
 		return Session{}, fmt.Errorf("invalid registration")
 	}
 
@@ -207,6 +222,156 @@ func (s *Service) Me(ctx context.Context, userID string) (User, error) {
 		return User{}, ErrUserNotFound
 	}
 	return user, err
+}
+
+func (s *Service) RequestPasswordReset(ctx context.Context, email string) error {
+	if !s.smtpConfig.enabled() {
+		return ErrResetEmailDisabled
+	}
+
+	email = normalizeEmail(email)
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	var userID string
+	err = tx.QueryRow(ctx,
+		`SELECT id::text FROM users WHERE email = $1 FOR UPDATE`,
+		email,
+	).Scan(&userID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	var recentlyRequested bool
+	if err = tx.QueryRow(ctx,
+		`SELECT EXISTS (
+		   SELECT 1 FROM password_reset_tokens
+		   WHERE user_id = $1::uuid AND created_at > now() - interval '1 minute'
+		 )`,
+		userID,
+	).Scan(&recentlyRequested); err != nil {
+		return err
+	}
+	if recentlyRequested {
+		return tx.Commit(ctx)
+	}
+
+	token, tokenHash, err := newRefreshToken()
+	if err != nil {
+		return err
+	}
+
+	if _, err = tx.Exec(ctx,
+		`UPDATE password_reset_tokens
+		 SET used_at = now()
+		 WHERE user_id = $1::uuid AND used_at IS NULL`,
+		userID,
+	); err != nil {
+		return err
+	}
+	if _, err = tx.Exec(ctx,
+		`INSERT INTO password_reset_tokens (user_id, token_hash, expires_at)
+		 VALUES ($1::uuid, $2, now() + interval '30 minutes')`,
+		userID, tokenHash,
+	); err != nil {
+		return err
+	}
+	if err = tx.Commit(ctx); err != nil {
+		return err
+	}
+
+	if err := sendPasswordResetEmail(ctx, s.smtpConfig, email, token); err != nil {
+		return fmt.Errorf("%w: %v", ErrResetEmailDelivery, err)
+	}
+	return nil
+}
+
+func (s *Service) ResetPassword(ctx context.Context, token, password string) error {
+	if len(password) < 8 || len(password) > 72 {
+		return ErrInvalidPassword
+	}
+	tokenHash, err := refreshTokenHash(token)
+	if err != nil {
+		return ErrPasswordResetToken
+	}
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	var userID string
+	err = tx.QueryRow(ctx,
+		`SELECT user_id::text FROM password_reset_tokens
+		 WHERE token_hash = $1 AND used_at IS NULL AND expires_at > now()
+		 FOR UPDATE`,
+		tokenHash,
+	).Scan(&userID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return ErrPasswordResetToken
+	}
+	if err != nil {
+		return err
+	}
+	if _, err = tx.Exec(ctx,
+		`UPDATE users SET password_hash = $1 WHERE id = $2::uuid`,
+		string(passwordHash), userID,
+	); err != nil {
+		return err
+	}
+	if _, err = tx.Exec(ctx,
+		`UPDATE password_reset_tokens SET used_at = now()
+		 WHERE user_id = $1::uuid AND used_at IS NULL`,
+		userID,
+	); err != nil {
+		return err
+	}
+	if _, err = tx.Exec(ctx,
+		`UPDATE refresh_tokens SET revoked_at = now()
+		 WHERE user_id = $1::uuid AND revoked_at IS NULL`,
+		userID,
+	); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
+func (s *Service) DeleteAccount(ctx context.Context, userID, password string) error {
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	var passwordHash string
+	err = tx.QueryRow(ctx,
+		`SELECT password_hash FROM users WHERE id = $1::uuid FOR UPDATE`,
+		userID,
+	).Scan(&passwordHash)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return ErrUserNotFound
+	}
+	if err != nil {
+		return err
+	}
+	if bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(password)) != nil {
+		return ErrIncorrectPassword
+	}
+	if _, err = tx.Exec(ctx, `DELETE FROM users WHERE id = $1::uuid`, userID); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
 }
 
 func (s *Service) issueAccessToken(userID string) (string, error) {
