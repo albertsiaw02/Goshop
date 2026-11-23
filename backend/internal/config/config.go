@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/gocerie/goshop/backend/internal/auth"
 )
 
 type Config struct {
@@ -11,6 +13,7 @@ type Config struct {
 	JWTSecret      []byte
 	HTTPAddr       string
 	AllowedOrigins []string
+	SMTP           auth.SMTPConfig
 }
 
 func Load() (Config, error) {
@@ -40,5 +43,13 @@ func Load() (Config, error) {
 		JWTSecret:      []byte(secret),
 		HTTPAddr:       addr,
 		AllowedOrigins: origins,
+		SMTP: auth.SMTPConfig{
+			Host:     strings.TrimSpace(os.Getenv("SMTP_HOST")),
+			Port:     strings.TrimSpace(os.Getenv("SMTP_PORT")),
+			Username: strings.TrimSpace(os.Getenv("SMTP_USERNAME")),
+			Password: os.Getenv("SMTP_PASSWORD"),
+			From:     strings.TrimSpace(os.Getenv("SMTP_FROM")),
+			ResetURL: strings.TrimSpace(os.Getenv("RESET_PASSWORD_URL")),
+		},
 	}, nil
 }

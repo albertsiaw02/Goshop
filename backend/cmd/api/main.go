@@ -39,7 +39,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:              cfg.HTTPAddr,
-		Handler:           httpapi.New(pool, cfg.JWTSecret, cfg.AllowedOrigins).Handler(),
+		Handler:           httpapi.New(pool, cfg.JWTSecret, cfg.AllowedOrigins, cfg.SMTP).Handler(),
 		ReadTimeout:       10 * time.Second,
 		ReadHeaderTimeout: 5 * time.Second,
 		WriteTimeout:      15 * time.Second,
