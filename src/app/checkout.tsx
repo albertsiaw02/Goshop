@@ -6,6 +6,7 @@ import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useTheme } from "@/hooks/use-theme";
+import { formatCurrency } from "@/lib/currency";
 
 export default function CheckoutScreen() {
   const theme = useTheme();
@@ -72,11 +73,11 @@ export default function CheckoutScreen() {
             </ThemedText>
             <View className="flex-row justify-between py-0.5">
               <ThemedText themeColor="textSecondary">Subtotal</ThemedText>
-              <ThemedText type="smallBold">${subtotal.toFixed(2)}</ThemedText>
+              <ThemedText type="smallBold">{formatCurrency(subtotal)}</ThemedText>
             </View>
             <View className="flex-row justify-between py-0.5">
               <ThemedText themeColor="textSecondary">Delivery</ThemedText>
-              <ThemedText type="smallBold">${delivery.toFixed(2)}</ThemedText>
+              <ThemedText type="smallBold">{formatCurrency(delivery)}</ThemedText>
             </View>
             <View className="mt-1 border-t border-border pt-3">
               <View className="flex-row justify-between">
@@ -84,7 +85,7 @@ export default function CheckoutScreen() {
                   Total
                 </ThemedText>
                 <ThemedText className="font-extrabold text-[16px] text-brand-ink">
-                  ${total.toFixed(2)}
+                  {formatCurrency(total)}
                 </ThemedText>
               </View>
             </View>

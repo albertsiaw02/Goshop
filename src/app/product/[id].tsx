@@ -10,6 +10,7 @@ import { ThemedView } from '@/components/themed-view';
 import { getProductById } from '@/data/products';
 import { useTheme } from '@/hooks/use-theme';
 import { useCart } from '@/store/cart';
+import { formatCurrency } from '@/lib/currency';
 
 function OrangeArtwork() {
   return (
@@ -60,8 +61,6 @@ export default function ProductDetailsScreen() {
       </ThemedView>
     );
   }
-
-  const mrp = product.mrp ?? Math.round(product.price * 1.4);
 
   return (
     <ThemedView className="flex-1">
@@ -131,10 +130,7 @@ export default function ProductDetailsScreen() {
               </ThemedText>
               <View className="mt-1 flex-row items-baseline gap-2">
                 <Text className="text-[17px] font-extrabold text-brand-ink">
-                  ₹{product.price.toFixed(0)}
-                </Text>
-                <Text className="text-[10px] text-muted">
-                  MRP <Text className="line-through">₹{mrp.toFixed(0)}</Text>
+                  {formatCurrency(product.price)}
                 </Text>
               </View>
 

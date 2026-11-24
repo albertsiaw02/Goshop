@@ -11,6 +11,7 @@ import { ThemedView } from "@/components/themed-view";
 import { getProductById } from "@/data/products";
 import { useTheme } from "@/hooks/use-theme";
 import { useCart } from "@/store/cart";
+import { formatCurrency } from "@/lib/currency";
 
 const DELIVERY_FEE = 2.5;
 
@@ -139,7 +140,7 @@ export default function CartScreen() {
                         </ThemedText>
                         <View className="mt-2.5 flex-row items-center justify-between gap-2">
                           <ThemedText className="text-[15px] font-bold">
-                            ${(product.price * item.qty).toFixed(2)}
+                            {formatCurrency(product.price * item.qty)}
                           </ThemedText>
                           <View className="flex-row items-center gap-2">
                             <Pressable
@@ -181,7 +182,7 @@ export default function CartScreen() {
                       Subtotal
                     </ThemedText>
                     <ThemedText className="text-[14px] font-semibold">
-                      ${subtotal.toFixed(2)}
+                      {formatCurrency(subtotal)}
                     </ThemedText>
                   </View>
                   <View className="flex-row justify-between">
@@ -192,7 +193,7 @@ export default function CartScreen() {
                       Delivery fee
                     </ThemedText>
                     <ThemedText className="text-[14px] font-semibold">
-                      ${DELIVERY_FEE.toFixed(2)}
+                      {formatCurrency(DELIVERY_FEE)}
                     </ThemedText>
                   </View>
                   <View className="mt-1 flex-row justify-between border-t border-border pt-4">
@@ -200,7 +201,7 @@ export default function CartScreen() {
                       Total
                     </ThemedText>
                     <ThemedText className="text-[16px] font-bold text-brand-ink">
-                      ${total.toFixed(2)}
+                      {formatCurrency(total)}
                     </ThemedText>
                   </View>
                 </View>
@@ -215,7 +216,7 @@ export default function CartScreen() {
               >
                 <View className="mt-3 flex-row items-center justify-center gap-2 rounded-2xl bg-brand-500 py-[17px]">
                   <Text className="text-[16px] font-bold text-white">
-                    Checkout · ${total.toFixed(2)}
+                    Checkout · {formatCurrency(total)}
                   </Text>
                   <Ionicons name="arrow-forward" size={17} color="#ffffff" />
                 </View>

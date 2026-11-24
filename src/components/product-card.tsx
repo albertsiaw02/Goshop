@@ -6,6 +6,7 @@ import { useColorScheme } from 'nativewind';
 
 import { useTheme } from '@/hooks/use-theme';
 import { useCart } from '@/store/cart';
+import { formatCurrency } from '@/lib/currency';
 
 import type { Product } from '@/data/products';
 
@@ -168,9 +169,9 @@ export function ProductCard({ product }: { product: Product }) {
           {isFreshTomato || isSpinach ? '10 MINS' : '10 MINS'}
         </Text>
         <View style={styles.priceRow}>
-          <Text style={[styles.price, { color: theme.text }]}>₹{product.price.toFixed(0)}</Text>
+          <Text style={[styles.price, { color: theme.text }]}>{formatCurrency(product.price)}</Text>
           <Text style={[styles.mrp, { color: theme.textSecondary }]}>
-            MRP ₹{mrp.toFixed(0)}
+            MRP {formatCurrency(mrp)}
           </Text>
           <Pressable
             accessibilityRole="button"
