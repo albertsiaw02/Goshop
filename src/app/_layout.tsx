@@ -27,7 +27,6 @@ function AppShell() {
     const requiresAuthentication =
       protectedRoute ||
       segments[0] === "checkout" ||
-      segments[0] === "delivery" ||
       segments[0] === "payment-methods" ||
       segments[0] === "order-tracking";
 

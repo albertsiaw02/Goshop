@@ -345,7 +345,7 @@ export default function DeliveryScreen() {
     <ThemedView className="flex-1">
       <SafeAreaView edges={['top']} className="flex-1">
         <View className="w-full max-w-[800px] flex-1 self-center px-5 pt-3">
-          <ScreenHeader fallback="/profile" subtitle="Search or choose a spot on the map" title="Delivery location" />
+          <ScreenHeader fallback="/(tabs)" subtitle="Search or choose a spot on the map" title="Delivery location" />
 
           <KeyboardAvoidingView
             className="flex-1"
