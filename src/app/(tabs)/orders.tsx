@@ -5,6 +5,7 @@ import { FlatList, Pressable, Text, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useTheme } from '@/hooks/use-theme';
+import { formatCurrency } from '@/lib/currency';
 
 type Order = {
   id: string;
@@ -57,7 +58,7 @@ export default function OrdersScreen() {
                       {item.date}
                     </ThemedText>
                     <ThemedText type="smallBold" className="text-brand-ink">
-                      ${item.total.toFixed(2)}
+                      {formatCurrency(item.total)}
                     </ThemedText>
                   </View>
                   <View className="items-end gap-2">

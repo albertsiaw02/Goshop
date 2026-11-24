@@ -40,7 +40,7 @@ const PROMOTIONS: Promotion[] = [
     image: 'photo-1459411621453-7b03977f4bfc',
     pill: 'FARM TO PANTRY',
     title: 'Straight from\nthe farm.',
-    caption: 'Free delivery on orders over $35',
+    caption: 'Free delivery on orders over GH₵35',
     cta: 'Order now',
   },
 ];
