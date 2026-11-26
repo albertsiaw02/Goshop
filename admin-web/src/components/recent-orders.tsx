@@ -2,6 +2,7 @@ import { CheckCircle2Icon, Clock3Icon, PackageCheckIcon } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import {
+  CardAction,
   Card,
   CardContent,
   CardDescription,
@@ -73,7 +74,16 @@ function OrderStatus({ status }: { status: string }) {
         : PackageCheckIcon
 
   return (
-    <Badge variant="outline" className="gap-1.5 font-normal">
+    <Badge
+      variant="outline"
+      className={
+        status === "Delivered"
+          ? "gap-1.5 border-primary/20 bg-primary/5 font-normal text-primary"
+          : status === "Preparing"
+            ? "gap-1.5 border-amber-500/20 bg-amber-500/5 font-normal text-amber-700 dark:text-amber-400"
+            : "gap-1.5 border-sky-500/20 bg-sky-500/5 font-normal text-sky-700 dark:text-sky-400"
+      }
+    >
       <Icon className="size-3.5" />
       {status}
     </Badge>
@@ -86,24 +96,41 @@ export function RecentOrders() {
       <CardHeader>
         <CardTitle>Recent orders</CardTitle>
         <CardDescription>Latest customer orders from today</CardDescription>
+        <CardAction>
+          <Badge variant="secondary" className="font-normal">
+            {orders.length} latest
+          </Badge>
+        </CardAction>
       </CardHeader>
       <CardContent>
-        <Table>
+        <Table className="table-fixed">
           <TableHeader>
-            <TableRow>
-              <TableHead>Order</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead className="text-right">Items</TableHead>
-              <TableHead className="text-right">Total</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Time</TableHead>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="w-[76px]">Order</TableHead>
+              <TableHead className="w-[154px]">Customer</TableHead>
+              <TableHead className="w-[52px] text-right">Items</TableHead>
+              <TableHead className="w-[90px] text-right">Total</TableHead>
+              <TableHead className="w-[142px]">Status</TableHead>
+              <TableHead className="w-[72px] text-right">Time</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {orders.map((order) => (
-              <TableRow key={order.id}>
-                <TableCell className="font-medium">{order.id}</TableCell>
-                <TableCell>{order.customer}</TableCell>
+              <TableRow key={order.id} className="group">
+                <TableCell className="font-medium text-primary">
+                  {order.id}
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex size-8 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
+                      {order.customer
+                        .split(" ")
+                        .map((part) => part[0])
+                        .join("")}
+                    </span>
+                    <span className="font-medium">{order.customer}</span>
+                  </div>
+                </TableCell>
                 <TableCell className="text-right">{order.items}</TableCell>
                 <TableCell className="text-right tabular-nums">
                   {formatCurrency(order.total)}
