@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
@@ -48,6 +48,10 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
+const currencyFormatter = new Intl.NumberFormat("en-GH", {
+  maximumFractionDigits: 0,
+})
+
 export function SalesChart() {
   const isMobile = useIsMobile()
   const [timeRange, setTimeRange] = React.useState(() =>
@@ -57,12 +61,19 @@ export function SalesChart() {
   const filteredData = chartData.slice(
     timeRange === "7d" ? -7 : timeRange === "30d" ? -30 : undefined
   )
+  const totalSales = filteredData.reduce((total, day) => total + day.sales, 0)
+  const averageSales = Math.round(totalSales / filteredData.length)
+  const peakSales = Math.max(...filteredData.map((day) => day.sales))
 
   return (
     <Card className="@container/card">
       <CardHeader>
-        <CardTitle>Sales over time</CardTitle>
-        <CardDescription>Daily store revenue</CardDescription>
+        <div className="space-y-1">
+          <CardTitle>Revenue trend</CardTitle>
+          <CardDescription>
+            Daily gross sales across the selected period
+          </CardDescription>
+        </div>
         <CardAction>
           <ToggleGroup
             multiple={false}
@@ -92,8 +103,8 @@ export function SalesChart() {
         </CardAction>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="h-[260px] w-full">
-          <AreaChart data={filteredData} margin={{ left: 8, right: 8 }}>
+        <ChartContainer config={chartConfig} className="h-[280px] w-full">
+          <AreaChart data={filteredData} margin={{ top: 12, right: 12, left: 0 }}>
             <defs>
               <linearGradient id="salesFill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="var(--color-sales)" stopOpacity={0.4} />
@@ -101,6 +112,15 @@ export function SalesChart() {
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} />
+            <YAxis
+              tickLine={false}
+              axisLine={false}
+              width={52}
+              tickMargin={8}
+              tickFormatter={(value: number) =>
+                `GH₵${currencyFormatter.format(value)}`
+              }
+            />
             <XAxis
               dataKey="date"
               tickLine={false}
@@ -137,6 +157,26 @@ export function SalesChart() {
             />
           </AreaChart>
         </ChartContainer>
+        <div className="mt-4 grid grid-cols-2 gap-3 border-t pt-4 sm:grid-cols-3">
+          <div>
+            <p className="text-xs text-muted-foreground">Period revenue</p>
+            <p className="mt-1 text-sm font-semibold tabular-nums">
+              GH₵{currencyFormatter.format(totalSales)}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Daily average</p>
+            <p className="mt-1 text-sm font-semibold tabular-nums">
+              GH₵{currencyFormatter.format(averageSales)}
+            </p>
+          </div>
+          <div className="col-span-2 sm:col-span-1">
+            <p className="text-xs text-muted-foreground">Best day</p>
+            <p className="mt-1 text-sm font-semibold tabular-nums">
+              GH₵{currencyFormatter.format(peakSales)}
+            </p>
+          </div>
+        </div>
       </CardContent>
     </Card>
   )

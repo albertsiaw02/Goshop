@@ -12,13 +12,18 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import type { Section } from "@/lib/sections"
 import {
+  BoxesIcon,
   ChartNoAxesCombinedIcon,
   CircleHelpIcon,
+  FileBarChartIcon,
   LayoutDashboardIcon,
+  PackageIcon,
   Settings2Icon,
   ShoppingCartIcon,
   StoreIcon,
+  UsersIcon,
 } from "lucide-react"
 
 const data = {
@@ -44,6 +49,28 @@ const data = {
       icon: <ChartNoAxesCombinedIcon />,
     },
   ],
+  navManage: [
+    {
+      title: "Inventory",
+      url: "#inventory",
+      icon: <BoxesIcon />,
+    },
+    {
+      title: "Products",
+      url: "#products",
+      icon: <PackageIcon />,
+    },
+    {
+      title: "Users",
+      url: "#users",
+      icon: <UsersIcon />,
+    },
+    {
+      title: "Reports",
+      url: "#reports",
+      icon: <FileBarChartIcon />,
+    },
+  ],
   navSecondary: [
     {
       title: "Settings",
@@ -58,7 +85,10 @@ const data = {
   ],
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  activeSection,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & { activeSection?: Section }) {
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -75,7 +105,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={data.navMain} label="Overview" active={activeSection} />
+        <NavMain
+          items={data.navManage}
+          label="Manage"
+          active={activeSection}
+        />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
